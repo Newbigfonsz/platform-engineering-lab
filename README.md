@@ -57,7 +57,7 @@ The control-node (192.168.1.49) serves as the central management hub with:
 - **Git** - Version control (configured for GitHub: Newbigfonsz)
 
 **SSH Access**: `ssh platformadmin@192.168.1.49`  
-**Password**: ***REMOVED***
+**Password**: [REDACTED]
 
 ---
 
@@ -105,16 +105,16 @@ curl http://192.168.1.240
 ### Proxmox VE
 - **Web UI**: https://192.168.1.210:8006
 - **User**: root@pam
-- **Password**: ***REMOVED***
+- **Password**: [REDACTED]
 
 ### VM Access
 - **User**: platformadmin
-- **Password**: ***REMOVED***
+- **Password**: [REDACTED]
 - **SSH Key**: Ed25519 (configured on control-node)
 
 ### AWS Integration
 - **IAM User**: cert-manager
-- **Account**: ***REMOVED***
+- **Account**: [REDACTED]
 - **Permissions**: Route53 (ChangeResourceRecordSets, GetChange, List*)
 
 ### Kubernetes
@@ -311,7 +311,7 @@ platform-lab/
 
 **Created**: December 2025  
 **Author**: Platform Engineering Lab  
-**Contact**: ***REMOVED***  
+**Contact**: [CONTACT_EMAIL]  
 **GitHub**: Newbigfonsz
 
 **This infrastructure represents enterprise-grade platform engineering practices suitable for production workloads.**

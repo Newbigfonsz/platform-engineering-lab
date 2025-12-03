@@ -1,0 +1,16 @@
+# Sensitive files
+terraform/terraform.tfvars
+terraform/.terraform/
+*.tfvars
+*password*
+*secret*
+*credentials*
+
+# Backup files (may contain sensitive data)
+backups/
+
+# System files
+.DS_Store
+*.swp
+*.swo
+*~
