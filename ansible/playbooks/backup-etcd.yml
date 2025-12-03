@@ -1,0 +1,20 @@
+---
+- name: Backup etcd
+  hosts: k8s_control
+  become: yes
+  tasks:
+    - name: Create backup directory
+      file:
+        path: /var/backups/etcd
+        state: directory
+        mode: '0755'
+
+    - name: Backup etcd
+      shell: |
+        ETCDCTL_API=3 etcdctl snapshot save /var/backups/etcd/etcd-backup-$(date +%Y%m%d-%H%M%S).db \
+          --endpoints=https://127.0.0.1:2379 \
+          --cacert=/etc/kubernetes/pki/etcd/ca.crt \
+          --cert=/etc/kubernetes/pki/etcd/server.crt \
+          --key=/etc/kubernetes/pki/etcd/server.key
+      args:
+        creates: /var/backups/etcd/etcd-backup-*.db

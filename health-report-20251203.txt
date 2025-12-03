@@ -1,0 +1,73 @@
+==========================================
+KUBERNETES CLUSTER HEALTH CHECK
+==========================================
+
+=== Cluster Nodes ===
+NAME           STATUS   ROLES           AGE   VERSION
+k8s-cp01       Ready    control-plane   23h   v1.28.15
+k8s-worker01   Ready    <none>          23h   v1.28.15
+k8s-worker02   Ready    <none>          23h   v1.28.15
+
+=== System Pods Status ===
+NAME                               READY   STATUS    RESTARTS   AGE
+coredns-5dd5756b68-cv8gd           1/1     Running   0          23h
+coredns-5dd5756b68-xkxhb           1/1     Running   0          23h
+etcd-k8s-cp01                      1/1     Running   0          23h
+kube-apiserver-k8s-cp01            1/1     Running   0          23h
+kube-controller-manager-k8s-cp01   1/1     Running   0          23h
+kube-proxy-glh9z                   1/1     Running   0          23h
+kube-proxy-t46t7                   1/1     Running   0          23h
+kube-proxy-vxjnj                   1/1     Running   0          23h
+kube-scheduler-k8s-cp01            1/1     Running   0          23h
+NAME                    READY   STATUS    RESTARTS   AGE
+kube-flannel-ds-cd2wx   1/1     Running   0          23h
+kube-flannel-ds-fcj5g   1/1     Running   0          23h
+kube-flannel-ds-gpjsq   1/1     Running   0          23h
+NAME                                        READY   STATUS    RESTARTS   AGE
+ingress-nginx-controller-68646f48d4-tdzgz   1/1     Running   0          22h
+NAME                                       READY   STATUS    RESTARTS     AGE
+cert-manager-9f74c854d-qr22t               1/1     Running   1 (9h ago)   22h
+cert-manager-cainjector-665cd78979-9gpfz   1/1     Running   0            22h
+cert-manager-webhook-65767c6f65-j6lbb      1/1     Running   0            22h
+
+=== Application Pods ===
+NAME                     READY   STATUS    RESTARTS   AGE
+nginx-7854ff8877-j9tcv   1/1     Running   0          22h
+nginx-7854ff8877-nskg9   1/1     Running   0          22h
+nginx-7854ff8877-wd87c   1/1     Running   0          22h
+
+=== Services & Ingress ===
+NAMESPACE        NAME                                 TYPE           CLUSTER-IP       EXTERNAL-IP     PORT(S)                      AGE
+cert-manager     cert-manager                         ClusterIP      10.111.100.159   <none>          9402/TCP                     22h
+cert-manager     cert-manager-webhook                 ClusterIP      10.104.12.61     <none>          443/TCP                      22h
+default          kubernetes                           ClusterIP      10.96.0.1        <none>          443/TCP                      23h
+demo             nginx                                LoadBalancer   10.99.109.133    192.168.1.240   80:31581/TCP                 22h
+ingress-nginx    ingress-nginx-controller             LoadBalancer   10.110.90.84     192.168.1.241   80:32630/TCP,443:31126/TCP   22h
+ingress-nginx    ingress-nginx-controller-admission   ClusterIP      10.96.235.100    <none>          443/TCP                      22h
+kube-system      kube-dns                             ClusterIP      10.96.0.10       <none>          53/UDP,53/TCP,9153/TCP       23h
+metallb-system   metallb-webhook-service              ClusterIP      10.110.144.90    <none>          443/TCP                      22h
+NAMESPACE   NAME         CLASS   HOSTS                      ADDRESS         PORTS     AGE
+demo        nginx-demo   nginx   demo.alphonzojonesjr.com   192.168.1.241   80, 443   20m
+
+=== Certificates ===
+NAMESPACE   NAME          READY   SECRET        AGE
+demo        demo-tls-v3   True    demo-tls-v3   20m
+
+=== Resource Usage ===
+Metrics server not installed (optional)
+
+=== Disk Usage per Node ===
+docker-host | CHANGED | rc=0 >>
+docker-host: 3% used of 94G
+k8s-worker01 | CHANGED | rc=0 >>
+k8s-worker01: 4% used of 94G
+k8s-worker02 | CHANGED | rc=0 >>
+k8s-worker02: 4% used of 94G
+k8s-cp01 | CHANGED | rc=0 >>
+k8s-cp01: 6% used of 63G
+
+=== Failed Pods (should be empty) ===
+
+==========================================
+HEALTH CHECK COMPLETE
+==========================================
