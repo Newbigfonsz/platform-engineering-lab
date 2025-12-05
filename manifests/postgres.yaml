@@ -6,7 +6,7 @@ metadata:
 type: Opaque
 stringData:
   POSTGRES_USER: taskapp
-  POSTGRES_PASSWORD: SecurePassword2025!
+  POSTGRES_PASSWORD: "CHANGE_ME_IN_PRODUCTION"
   POSTGRES_DB: taskappdb
 ---
 apiVersion: apps/v1

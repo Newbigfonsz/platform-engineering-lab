@@ -1,16 +1,45 @@
-# Sensitive files
-terraform/terraform.tfvars
-terraform/.terraform/
+# Credentials and secrets
 *.tfvars
+!*.tfvars.example
 *password*
 *secret*
-*credentials*
+*.pem
+*.key
+!*.pub
+.env
+.env.*
+*.credentials
 
-# Backup files (may contain sensitive data)
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.backup
+
+# Ansible
+*.vault
+*.retry
+
+# Backups (may contain sensitive data)
 backups/
+*.backup
+*.bak
 
 # System files
 .DS_Store
 *.swp
 *.swo
 *~
+.vscode/
+.idea/
+
+# Logs
+*.log
+
+# SSH keys
+id_rsa
+id_ed25519
+!id_*.pub
+
+# Kubernetes configs with embedded certs
+kubeconfig
+*.kubeconfig

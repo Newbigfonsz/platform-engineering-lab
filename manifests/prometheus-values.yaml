@@ -22,7 +22,7 @@ prometheus:
 
 grafana:
   enabled: true
-  adminPassword: ***REMOVED***
+  adminPassword: CHANGE_ME_IN_PRODUCTION
   persistence:
     enabled: false  # Disable for now to get it running
   ingress:
