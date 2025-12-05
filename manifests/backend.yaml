@@ -153,3 +153,5 @@ spec:
   - port: 3000
     targetPort: 3000
   type: ClusterIP
+
+# CI/CD test after kubeconfig fix - 20:03:11
