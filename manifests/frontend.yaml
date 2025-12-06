@@ -159,7 +159,7 @@ spec:
             <body>
                 <div class="container">
                     <h1>🚀 TaskApp</h1>
-                    <p class="subtitle">Full-Stack Kubernetes Demo</p>
+                    <p class="subtitle">Full-Stack Kubernetes Demo - CI/CD Deployed! ✅</p>
                     <div class="tech-stack">
                         <strong>Tech Stack:</strong> React Frontend • Node.js/Express API • PostgreSQL Database • Kubernetes • cert-manager TLS
                     </div>
