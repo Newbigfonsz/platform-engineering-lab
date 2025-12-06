@@ -441,3 +441,20 @@ Built as a portfolio project to demonstrate enterprise-level platform engineerin
 Built with ❤️ using Kubernetes, ArgoCD, and modern DevOps practices
 
 </div>
+
+## 🔄 Auto-Scaling (NEW!)
+
+**Horizontal Pod Autoscaler** configured for TaskApp backend:
+- **Scales:** 2-10 replicas based on load
+- **CPU Target:** 70% utilization
+- **Memory Target:** 80% utilization
+- **Smart Scaling:** Aggressive scale-up, conservative scale-down
+
+View HPA status:
+```bash
+kubectl get hpa -n taskapp
+kubectl describe hpa taskapp-backend-hpa -n taskapp
+```
+
+This enables the application to automatically handle traffic spikes while conserving resources during low usage.
+
