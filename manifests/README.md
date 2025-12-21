@@ -6,7 +6,7 @@ A production-ready task management application demonstrating modern cloud-native
 ```
 Internet (HTTPS)
     ↓
-Nginx Ingress Controller (192.168.1.241)
+Nginx Ingress Controller (10.10.0.220)
     ↓ TLS Termination
     ├─→ / → Frontend Service (React SPA)
     │         ↓

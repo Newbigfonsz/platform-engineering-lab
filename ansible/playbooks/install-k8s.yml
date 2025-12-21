@@ -98,20 +98,20 @@
       args:
         creates: /etc/kubernetes/admin.conf
 
-    - name: Create .kube directory for platformadmin
+    - name: Create .kube directory for ubuntu
       file:
-        path: /home/platformadmin/.kube
+        path: /home/ubuntu/.kube
         state: directory
-        owner: platformadmin
-        group: platformadmin
+        owner: ubuntu
+        group: ubuntu
 
     - name: Copy kubeconfig
       copy:
         src: /etc/kubernetes/admin.conf
-        dest: /home/platformadmin/.kube/config
+        dest: /home/ubuntu/.kube/config
         remote_src: yes
-        owner: platformadmin
-        group: platformadmin
+        owner: ubuntu
+        group: ubuntu
 
     - name: Install Flannel CNI
       become: no

@@ -3,7 +3,7 @@
 ## Kubernetes Cluster Recovery
 
 ### If Control Plane Fails:
-1. SSH to k8s-cp01: `ssh platformadmin@192.168.1.41`
+1. SSH to k8s-cp01: `ssh ubuntu@10.10.0.103`
 2. Restore etcd: `sudo ETCDCTL_API=3 etcdctl snapshot restore /var/backups/etcd/etcd-backup-XXXXXX.db`
 3. Restart kubelet: `sudo systemctl restart kubelet`
 
@@ -22,7 +22,7 @@
 
 Take snapshots before major changes:
 ```bash
-ssh root@192.168.1.210 "qm snapshot 103 pre-upgrade-$(date +%Y%m%d)"
+ssh root@10.10.0.210 "qm snapshot 103 pre-upgrade-$(date +%Y%m%d)"
 ```
 
 ## Testing Recovery:

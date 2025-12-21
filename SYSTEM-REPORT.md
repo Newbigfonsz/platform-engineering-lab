@@ -32,8 +32,8 @@ demo        demo-tls-v3   True    demo-tls-v3   21m
 NAMESPACE        NAME                                 TYPE           CLUSTER-IP       EXTERNAL-IP     PORT(S)                      AGE
 cert-manager     cert-manager                         ClusterIP      10.111.100.159   <none>          9402/TCP                     22h
 cert-manager     cert-manager-webhook                 ClusterIP      10.104.12.61     <none>          443/TCP                      22h
-demo             nginx                                LoadBalancer   10.99.109.133    192.168.1.240   80:31581/TCP                 22h
-ingress-nginx    ingress-nginx-controller             LoadBalancer   10.110.90.84     192.168.1.241   80:32630/TCP,443:31126/TCP   22h
+demo             nginx                                LoadBalancer   10.99.109.133    10.10.0.220   80:31581/TCP                 22h
+ingress-nginx    ingress-nginx-controller             LoadBalancer   10.110.90.84     10.10.0.220   80:32630/TCP,443:31126/TCP   22h
 ingress-nginx    ingress-nginx-controller-admission   ClusterIP      10.96.235.100    <none>          443/TCP                      22h
 metallb-system   metallb-webhook-service              ClusterIP      10.110.144.90    <none>          443/TCP                      22h
 ```

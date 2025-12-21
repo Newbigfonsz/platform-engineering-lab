@@ -12,7 +12,7 @@
 - **Hypervisor**: Proxmox VE on bare metal
 - **Storage**: 800GB+ with ZFS compression
 - **VMs**: 7 total (control-node, docker-host, 3x Kubernetes nodes, desktop, template)
-- **Networking**: Flannel CNI (10.244.0.0/16), MetalLB LoadBalancer (192.168.1.240-241)
+- **Networking**: Flannel CNI (10.244.0.0/16), MetalLB LoadBalancer (10.10.0.220-241)
 
 ### Kubernetes Cluster (v1.28.15)
 - **Architecture**: 1 control plane + 2 worker nodes
