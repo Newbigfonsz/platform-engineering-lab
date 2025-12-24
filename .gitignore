@@ -43,3 +43,5 @@ id_ed25519
 # Kubernetes configs with embedded certs
 kubeconfig
 *.kubeconfig
+terraform.tfvars
+*.tfstate*

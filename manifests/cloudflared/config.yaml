@@ -1,0 +1,17 @@
+tunnel: f5de6c91-b0d2-4553-be11-e4801c26809c
+
+ingress:
+  - hostname: taskapp.alphonzojonesjr.com
+    service: http://ingress-nginx-controller.ingress-nginx.svc.cluster.local:80
+
+  - hostname: grafana.alphonzojonesjr.com
+    service: http://ingress-nginx-controller.ingress-nginx.svc.cluster.local:80
+
+  - hostname: argocd.alphonzojonesjr.com
+    service: http://ingress-nginx-controller.ingress-nginx.svc.cluster.local:80
+
+  - hostname: demo.alphonzojonesjr.com
+    service: http://ingress-nginx-controller.ingress-nginx.svc.cluster.local:80
+
+  - service: http_status:404
+

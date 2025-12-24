@@ -1,17 +1,17 @@
 terraform {
   required_providers {
     proxmox = {
-      source  = "telmate/proxmox"
-      version = "2.9.14"
+      source  = "bpg/proxmox"
+      version = "0.38.1"
     }
   }
 }
 
 provider "proxmox" {
-  pm_api_url      = "https://192.168.1.210:8006/api2/json"
-  pm_user         = "root@pam"
-  pm_password     = var.proxmox_password
-  pm_tls_insecure = true
+  endpoint = "https://10.10.0.210:8006/"
+  username = "root@pam"
+  password = var.proxmox_password
+  insecure = true
 }
 
 variable "proxmox_password" {
