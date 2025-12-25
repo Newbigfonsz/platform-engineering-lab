@@ -12,7 +12,7 @@ spec:
     helm:
       values: |
         grafana:
-          adminPassword: admin123
+          adminPassword: ${GRAFANA_ADMIN_PASSWORD}
           ingress:
             enabled: true
             ingressClassName: nginx

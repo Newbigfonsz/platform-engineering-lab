@@ -93,7 +93,7 @@ resource "proxmox_virtual_environment_vm" "k8s_node" {
 
     user_account {
       username = "ubuntu"
-      password = "ApexJonesJr2026!"
+      password = var.vm_password
       keys     = [file(pathexpand("~/.ssh/id_ed25519.pub"))]
     }
   }
