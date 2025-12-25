@@ -17,6 +17,7 @@ A production-grade Platform Engineering demonstration featuring Infrastructure a
 | Grafana | [grafana.alphonzojonesjr.com](https://grafana.alphonzojonesjr.com) | Monitoring |
 | Demo | [demo.alphonzojonesjr.com](https://demo.alphonzojonesjr.com) | Landing page |
 | DNS | [dns.alphonzojonesjr.com](https://dns.alphonzojonesjr.com) | Technitium DNS |
+| Vault | [vault.alphonzojonesjr.com](https://vault.alphonzojonesjr.com) | Secrets Management |(https://dns.alphonzojonesjr.com) | Technitium DNS |
 
 ## 🛠️ Tech Stack
 

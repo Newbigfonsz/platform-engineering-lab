@@ -31,3 +31,24 @@ All credentials stored securely. Retrieve via:
 | Technitium | Stored in password manager |
 | Proxmox | Stored in password manager |
 | VMs | Stored in password manager |
+
+## Secrets Management (Vault)
+
+| Component | Details |
+|-----------|---------|
+| URL | https://vault.alphonzojonesjr.com |
+| Namespace | vault |
+| Auth Methods | Kubernetes, Token |
+| Injector | Enabled |
+
+### Access Vault CLI
+```bash
+kubectl exec -it -n vault vault-0 -- /bin/sh
+vault status
+vault login
+```
+
+### Retrieve Root Token
+```bash
+kubectl get secret -n vault vault-init -o jsonpath='{.data.root_token}' | base64 -d
+```
