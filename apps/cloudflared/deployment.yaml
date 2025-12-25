@@ -1,3 +1,5 @@
+# NOTE: Before applying, create the secret manually:
+# kubectl create secret generic cloudflared-token -n cloudflared --from-literal=token=YOUR_TOKEN_HERE
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -21,4 +23,10 @@ spec:
         - --no-autoupdate
         - run
         - --token
-        - eyJhIjoiYjQ2NzIzNDJiMjY5Y2U0OGM2NmRhZWE3NzdjZjhkZTkiLCJ0IjoiZjVkZTZjOTEtYjBkMi00NTUzLWJlMTEtZTQ4MDFjMjY4MDljIiwicyI6Ill6QXlNekEyWkRndFpUSXpNeTAwWkRFMkxUZzRabVl0WVRobE1EY3dZelk1TjJJdyJ9
+        - $(TUNNEL_TOKEN)
+        env:
+        - name: TUNNEL_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: cloudflared-token
+              key: token

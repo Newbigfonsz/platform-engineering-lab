@@ -1,4 +1,3 @@
-# Default deny all ingress traffic
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
@@ -9,7 +8,6 @@ spec:
   policyTypes:
   - Ingress
 ---
-# Allow frontend to receive traffic from ingress
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
@@ -30,7 +28,6 @@ spec:
     - protocol: TCP
       port: 80
 ---
-# Allow backend to receive traffic from frontend
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
@@ -51,7 +48,6 @@ spec:
     - protocol: TCP
       port: 3000
 ---
-# Allow postgres to receive traffic from backend only
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:

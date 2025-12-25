@@ -1,47 +1,25 @@
-# Credentials and secrets
-*.tfvars
-!*.tfvars.example
-*password*
-*secret*
-*.pem
-*.key
-!*.pub
-.env
-.env.*
-*.credentials
-
 # Terraform
 .terraform/
 *.tfstate
-*.tfstate.backup
+*.tfstate.*
+*.tfvars
+.terraform.lock.hcl
 
-# Ansible
-*.vault
-*.retry
+# Secrets
+**/secrets.yaml
+**/secret.yaml
+*-secret.yaml
 
-# Backups (may contain sensitive data)
+# Backups
 backups/
-*.backup
-*.bak
+*.sql
+*.tar.gz
 
-# System files
+# OS
 .DS_Store
 *.swp
 *.swo
-*~
-.vscode/
+
+# IDE
 .idea/
-
-# Logs
-*.log
-
-# SSH keys
-id_rsa
-id_ed25519
-!id_*.pub
-
-# Kubernetes configs with embedded certs
-kubeconfig
-*.kubeconfig
-terraform.tfvars
-*.tfstate*
+.vscode/
