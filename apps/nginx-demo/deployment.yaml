@@ -1,0 +1,147 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-demo
+  namespace: nginx-demo
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: nginx-demo
+  template:
+    metadata:
+      labels:
+        app: nginx-demo
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:alpine
+        ports:
+        - containerPort: 80
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "50m"
+          limits:
+            memory: "128Mi"
+            cpu: "100m"
+        volumeMounts:
+        - name: html
+          mountPath: /usr/share/nginx/html
+      volumes:
+      - name: html
+        configMap:
+          name: nginx-demo-html
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-demo-html
+  namespace: nginx-demo
+data:
+  index.html: |
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Platform Engineering Lab</title>
+        <style>
+            body {
+                font-family: 'Segoe UI', Arial, sans-serif;
+                background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+                color: white;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                min-height: 100vh;
+                margin: 0;
+            }
+            .container {
+                text-align: center;
+                padding: 40px;
+                background: rgba(255,255,255,0.1);
+                border-radius: 20px;
+                backdrop-filter: blur(10px);
+                max-width: 800px;
+            }
+            h1 { font-size: 2.5em; margin-bottom: 10px; }
+            .subtitle { color: #4ade80; font-size: 1.2em; }
+            .tech-stack {
+                display: flex;
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 15px;
+                margin: 30px 0;
+            }
+            .tech {
+                background: rgba(74, 222, 128, 0.2);
+                padding: 10px 20px;
+                border-radius: 25px;
+                border: 1px solid #4ade80;
+            }
+            .links { margin-top: 30px; }
+            .links a {
+                color: #60a5fa;
+                text-decoration: none;
+                margin: 0 15px;
+            }
+            .links a:hover { text-decoration: underline; }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>🚀 Platform Engineering Lab</h1>
+            <p class="subtitle">Production-Grade Kubernetes Infrastructure</p>
+            
+            <div class="tech-stack">
+                <span class="tech">Kubernetes</span>
+                <span class="tech">Terraform</span>
+                <span class="tech">ArgoCD</span>
+                <span class="tech">Prometheus</span>
+                <span class="tech">Grafana</span>
+                <span class="tech">Cloudflare</span>
+            </div>
+            
+            <p>Built by Alphonzo Jones Jr.</p>
+            
+            <div class="links">
+                <a href="https://taskapp.alphonzojonesjr.com">TaskApp</a>
+                <a href="https://argocd.alphonzojonesjr.com">ArgoCD</a>
+                <a href="https://grafana.alphonzojonesjr.com">Grafana</a>
+                <a href="https://dns.alphonzojonesjr.com">DNS</a>
+            </div>
+        </div>
+    </body>
+    </html>
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-demo
+  namespace: nginx-demo
+spec:
+  selector:
+    app: nginx-demo
+  ports:
+  - port: 80
+    targetPort: 80
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: nginx-demo-ingress
+  namespace: nginx-demo
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: lab.alphonzojonesjr.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: nginx-demo
+            port:
+              number: 80

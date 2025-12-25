@@ -1,0 +1,14 @@
+name: Scheduled Backup Reminder
+
+on:
+  schedule:
+    - cron: '0 0 * * 0'  # Weekly on Sunday
+
+jobs:
+  reminder:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Backup Reminder
+        run: |
+          echo "Weekly reminder: Run backup script on k8s-cp01"
+          echo "Command: ~/platform-engineering-lab/scripts/backup.sh"
