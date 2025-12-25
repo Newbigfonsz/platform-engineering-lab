@@ -1,0 +1,141 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: taskapp-vault
+  namespace: taskapp
+  labels:
+    app: taskapp-vault
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: taskapp-vault
+  template:
+    metadata:
+      labels:
+        app: taskapp-vault
+      annotations:
+        # --- VAULT CONFIGURATION ---
+        vault.hashicorp.com/agent-inject: "true"
+        vault.hashicorp.com/role: "taskapp-role"
+        vault.hashicorp.com/agent-inject-secret-config.env: "internal/data/database/config"
+        # We format the secret to export the EXACT variable names your app needs
+        vault.hashicorp.com/agent-inject-template-config.env: |
+          {{- with secret "internal/data/database/config" -}}
+          export DATABASE_USER="{{ .Data.data.username }}"
+          export DATABASE_PASSWORD="{{ .Data.data.password }}"
+          export DATABASE_HOST="postgres"
+          export DATABASE_PORT="5432"
+          export DATABASE_NAME="taskappdb"
+          {{- end -}}
+    spec:
+      serviceAccountName: default
+      containers:
+      - name: backend
+        image: node:18-alpine
+        command: ["/bin/sh", "-c"]
+        # This argument block creates the app AND loads the secrets
+        args:
+        - |
+          # 1. Create package.json
+          cat > package.json << 'PKGEOF'
+          {
+            "name": "taskapp-backend",
+            "version": "1.0.0",
+            "main": "server.js",
+            "scripts": {
+              "start": "node server.js"
+            }
+          }
+          PKGEOF
+
+          # 2. Install dependencies
+          npm install express pg cors
+
+          # 3. Create server.js (Your original code)
+          cat > server.js << 'SRVEOF'
+          const express = require('express');
+          const { Pool } = require('pg');
+          const cors = require('cors');
+          const app = express();
+          app.use(cors());
+          app.use(express.json());
+
+          const pool = new Pool({
+            host: process.env.DATABASE_HOST,
+            port: process.env.DATABASE_PORT,
+            user: process.env.DATABASE_USER,
+            password: process.env.DATABASE_PASSWORD,
+            database: process.env.DATABASE_NAME,
+          });
+
+          pool.query(`
+            CREATE TABLE IF NOT EXISTS tasks (
+              id SERIAL PRIMARY KEY,
+              title TEXT NOT NULL,
+              completed BOOLEAN DEFAULT FALSE,
+              created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+          `).then(() => {
+            console.log('✅ Database initialized');
+          }).catch(err => {
+            console.error('Database initialization error:', err);
+          });
+
+          app.get('/api/tasks', async (req, res) => {
+            try {
+              const result = await pool.query('SELECT * FROM tasks ORDER BY created_at DESC');
+              res.json(result.rows);
+            } catch (err) {
+              res.status(500).json({ error: err.message });
+            }
+          });
+
+          app.post('/api/tasks', async (req, res) => {
+            try {
+              const { title } = req.body;
+              const result = await pool.query(
+                'INSERT INTO tasks (title) VALUES ($1) RETURNING *',
+                [title]
+              );
+              res.json(result.rows[0]);
+            } catch (err) {
+              res.status(500).json({ error: err.message });
+            }
+          });
+
+          app.patch('/api/tasks/:id', async (req, res) => {
+            try {
+              const { id } = req.params;
+              const { completed } = req.body;
+              const result = await pool.query(
+                'UPDATE tasks SET completed = $1 WHERE id = $2 RETURNING *',
+                [completed, id]
+              );
+              res.json(result.rows[0]);
+            } catch (err) {
+              res.status(500).json({ error: err.message });
+            }
+          });
+
+          app.delete('/api/tasks/:id', async (req, res) => {
+            try {
+              const { id } = req.params;
+              await pool.query('DELETE FROM tasks WHERE id = $1', [id]);
+              res.json({ success: true });
+            } catch (err) {
+              res.status(500).json({ error: err.message });
+            }
+          });
+
+          app.listen(3000, () => {
+            console.log('🚀 Backend API running on port 3000');
+          });
+          SRVEOF
+          
+          # 4. LOAD SECRETS FROM VAULT & START APP
+          echo "Loading secrets from Vault..."
+          source /vault/secrets/config.env
+          node server.js
+        ports:
+        - containerPort: 3000
