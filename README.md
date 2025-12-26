@@ -1,38 +1,94 @@
 # 🚀 Platform Engineering Lab
 
-[![CI/CD Pipeline](https://github.com/Newbigfonsz/platform-engineering-lab/actions/workflows/ci.yaml/badge.svg)](https://github.com/Newbigfonsz/platform-engineering-lab/actions/workflows/ci.yaml)
+[![Status](https://img.shields.io/badge/Status-All%20Systems%20Operational-brightgreen)](https://status.alphonzojonesjr.com/status/status)
 [![Kubernetes](https://img.shields.io/badge/Kubernetes-v1.28-blue?logo=kubernetes)](https://kubernetes.io)
 [![Terraform](https://img.shields.io/badge/Terraform-IaC-purple?logo=terraform)](https://terraform.io)
 [![ArgoCD](https://img.shields.io/badge/ArgoCD-GitOps-orange?logo=argo)](https://argoproj.github.io/cd)
 
 A production-grade Platform Engineering demonstration featuring Infrastructure as Code, GitOps, and modern DevOps practices.
 
-## 🏗️ Architecture
 ## 🌐 Live Services
 
 | Service | URL | Description |
 |---------|-----|-------------|
-| TaskApp | [taskapp.alphonzojonesjr.com](https://taskapp.alphonzojonesjr.com) | Full-stack demo app |
-| ArgoCD | [argocd.alphonzojonesjr.com](https://argocd.alphonzojonesjr.com) | GitOps dashboard |
-| Grafana | [grafana.alphonzojonesjr.com](https://grafana.alphonzojonesjr.com) | Monitoring |
-| Demo | [demo.alphonzojonesjr.com](https://demo.alphonzojonesjr.com) | Landing page |
-| DNS | [dns.alphonzojonesjr.com](https://dns.alphonzojonesjr.com) | Technitium DNS |
-| Vault | [vault.alphonzojonesjr.com](https://vault.alphonzojonesjr.com) | Secrets Management |(https://dns.alphonzojonesjr.com) | Technitium DNS |
+| 📊 Status Page | [status.alphonzojonesjr.com](https://status.alphonzojonesjr.com/status/status) | Uptime Monitoring |
+| 🚀 Lab | [lab.alphonzojonesjr.com](https://lab.alphonzojonesjr.com) | Landing Page |
+| 📝 TaskApp | [taskapp.alphonzojonesjr.com](https://taskapp.alphonzojonesjr.com) | Full-Stack Demo App |
+| 🔄 ArgoCD | [argocd.alphonzojonesjr.com](https://argocd.alphonzojonesjr.com) | GitOps Dashboard |
+| 📈 Grafana | [grafana.alphonzojonesjr.com](https://grafana.alphonzojonesjr.com) | Monitoring & Logs |
+| 🛡️ DNS | [dns.alphonzojonesjr.com](https://dns.alphonzojonesjr.com) | Technitium DNS |
+| 🔐 Vault | [vault.alphonzojonesjr.com](https://vault.alphonzojonesjr.com) | Secrets Management |
+| ☸️ K8s Dashboard | [k8s.alphonzojonesjr.com](https://k8s.alphonzojonesjr.com) | Cluster Management |
+| 🌐 Demo | [demo.alphonzojonesjr.com](https://demo.alphonzojonesjr.com) | Demo Site |
+
+## 🏗️ Architecture
+┌─────────────────────────────────────────────────────────────────────┐
+│                         INTERNET                                     │
+│                            │                                         │
+│                   Cloudflare Tunnel                                  │
+│                            │                                         │
+├─────────────────────────────────────────────────────────────────────┤
+│                      KUBERNETES CLUSTER                              │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐                 │
+│  │ k8s-cp01    │  │ k8s-worker01│  │ k8s-worker02│                 │
+│  │ Control     │  │ Apps        │  │ Apps + DNS  │                 │
+│  │ Plane       │  │             │  │             │                 │
+│  └─────────────┘  └─────────────┘  └─────────────┘                 │
+├─────────────────────────────────────────────────────────────────────┤
+│                       PROXMOX HOST                                   │
+│                  Managed by Terraform                                │
+└─────────────────────────────────────────────────────────────────────┘
 
 ## 🛠️ Tech Stack
 
-| Layer | Technology |
-|-------|------------|
-| Infrastructure | Proxmox VE, Terraform |
-| Orchestration | Kubernetes (kubeadm) |
-| Networking | MetalLB, Ingress-nginx, Calico |
-| GitOps | ArgoCD |
-| Monitoring | Prometheus, Grafana |
-| DNS | Technitium (449K+ blocked domains) |
-| Ingress | Cloudflare Tunnel |
-| Security | Network Policies, Pod Security Standards |
+| Category | Technologies |
+|----------|--------------|
+| **Infrastructure** | Proxmox VE, Terraform |
+| **Orchestration** | Kubernetes (kubeadm) |
+| **Networking** | MetalLB, Ingress-nginx, Cloudflare Tunnel |
+| **GitOps** | ArgoCD |
+| **Monitoring** | Prometheus, Grafana, Loki, Uptime Kuma |
+| **Secrets** | HashiCorp Vault |
+| **DNS** | Technitium (449K+ blocked domains) |
+| **Policy** | Kyverno |
+| **Backups** | Automated PostgreSQL CronJob |
 
 ## 📁 Repository Structure
+platform-engineering-lab/
+├── terraform/
+│   └── proxmox/              # VM infrastructure
+├── apps/
+│   ├── taskapp/              # Full-stack application
+│   ├── demo/                 # Demo site
+│   ├── cloudflared/          # Tunnel connector
+│   ├── technitium/           # DNS server
+│   ├── nginx-demo/           # Lab landing page
+│   ├── uptime-kuma/          # Status page
+│   ├── vault/                # Secrets management
+│   └── kubernetes-dashboard/ # K8s UI
+├── argocd/
+│   ├── apps/                 # ArgoCD applications
+│   └── app-of-apps.yaml      # Root application
+├── manifests/
+│   └── security/             # Security policies
+├── scripts/                  # Automation scripts
+├── docs/                     # Documentation
+└── .github/workflows/        # CI/CD pipelines
+
+## 📊 Platform Stats
+
+- **9 Public Services**
+- **62+ Running Pods**
+- **8 Uptime Monitors**
+- **99.985% Availability**
+- **449K+ DNS Blocked Domains**
+
+## 📖 Documentation
+
+- [Architecture Overview](docs/ARCHITECTURE.md)
+- [Disaster Recovery](docs/DISASTER-RECOVERY.md)
+- [Demo Script](docs/DEMO-SCRIPT.md)
+
 ## 🚀 Quick Start
 
 ### Prerequisites
@@ -54,21 +110,6 @@ See [docs/DISASTER-RECOVERY.md](docs/DISASTER-RECOVERY.md)
 ```bash
 kubectl apply -f argocd/app-of-apps.yaml
 ```
-
-## 📊 Key Features
-
-- **Infrastructure as Code**: All infrastructure defined in Terraform
-- **GitOps**: ArgoCD automatically syncs cluster state from Git
-- **Observability**: Full metrics with Prometheus/Grafana
-- **Security**: Network policies, pod security standards
-- **DNS Management**: Self-hosted DNS with ad blocking
-- **Disaster Recovery**: Documented runbook, automated backups
-
-## 📖 Documentation
-
-- [Architecture Overview](docs/ARCHITECTURE.md)
-- [Disaster Recovery](docs/DISASTER-RECOVERY.md)
-- [Demo Script](docs/DEMO-SCRIPT.md)
 
 ## 👤 Author
 
