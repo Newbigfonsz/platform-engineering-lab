@@ -1,0 +1,407 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: chatbot
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: chatbot-secret
+  namespace: chatbot
+stringData:
+  ANTHROPIC_API_KEY: "your-api-key-here"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: chatbot-code
+  namespace: chatbot
+data:
+  app.py: |
+    from fastapi import FastAPI, HTTPException
+    from fastapi.responses import HTMLResponse
+    from fastapi.middleware.cors import CORSMiddleware
+    from pydantic import BaseModel
+    import httpx
+    import os
+    import json
+
+    app = FastAPI(title="Platform Assistant", description="AI-powered assistant for Alphonzo's Platform Engineering Lab")
+
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+
+    ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
+    
+    SYSTEM_PROMPT = """You are the AI assistant for Alphonzo Jones Jr.'s Platform Engineering Lab. 
+    
+    About the platform:
+    - 13 live services running on a 3-node Kubernetes cluster
+    - Built with: Kubernetes, Terraform, ArgoCD, Prometheus, Grafana, Vault, Kyverno
+    - Services include: Portfolio, TaskApp, URL Shortener, ArgoCD, Grafana, Vault, Pulse, Status Page, and more
+    
+    Key URLs:
+    - Portfolio: https://alphonzojonesjr.com
+    - TaskApp: https://taskapp.alphonzojonesjr.com
+    - URL Shortener: https://short.alphonzojonesjr.com
+    - ArgoCD: https://argocd.alphonzojonesjr.com
+    - Grafana: https://grafana.alphonzojonesjr.com
+    - Status: https://status.alphonzojonesjr.com
+    - Pulse: https://pulse.alphonzojonesjr.com
+    
+    About Alphonzo:
+    - Platform Engineer / DevOps Engineer
+    - Education: AAS in Cloud Computing from NOVA Loudoun
+    - Certifications: AWS Cloud Practitioner, AWS Solutions Architect Associate
+    - Skills: Kubernetes, Terraform, Python, FastAPI, ArgoCD, and more
+    
+    Be helpful, friendly, and concise. If asked about technical details, provide accurate information about the platform."""
+
+    class ChatMessage(BaseModel):
+        message: str
+
+    class ChatResponse(BaseModel):
+        response: str
+
+    @app.get("/", response_class=HTMLResponse)
+    async def home():
+        return """
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Platform Assistant - AI Chat</title>
+        <style>
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            body {
+                font-family: 'Segoe UI', Arial, sans-serif;
+                background: linear-gradient(135deg, #0f0f23 0%, #1a1a3e 100%);
+                color: white;
+                min-height: 100vh;
+                display: flex;
+                flex-direction: column;
+            }
+            .header {
+                background: rgba(255,255,255,0.05);
+                padding: 20px;
+                text-align: center;
+                border-bottom: 1px solid rgba(255,255,255,0.1);
+            }
+            .header h1 {
+                background: linear-gradient(90deg, #4ade80, #60a5fa);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                font-size: 1.8em;
+            }
+            .header p { color: #a0a0a0; margin-top: 5px; }
+            .chat-container {
+                flex: 1;
+                max-width: 800px;
+                margin: 0 auto;
+                padding: 20px;
+                width: 100%;
+                display: flex;
+                flex-direction: column;
+            }
+            .messages {
+                flex: 1;
+                overflow-y: auto;
+                padding: 20px 0;
+            }
+            .message {
+                margin-bottom: 20px;
+                display: flex;
+                gap: 12px;
+            }
+            .message.user { flex-direction: row-reverse; }
+            .avatar {
+                width: 36px;
+                height: 36px;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 18px;
+                flex-shrink: 0;
+            }
+            .message.assistant .avatar { background: linear-gradient(135deg, #4ade80, #60a5fa); }
+            .message.user .avatar { background: linear-gradient(135deg, #60a5fa, #a78bfa); }
+            .bubble {
+                max-width: 70%;
+                padding: 12px 16px;
+                border-radius: 16px;
+                line-height: 1.5;
+            }
+            .message.assistant .bubble {
+                background: rgba(255,255,255,0.1);
+                border-bottom-left-radius: 4px;
+            }
+            .message.user .bubble {
+                background: linear-gradient(135deg, #4ade80, #22c55e);
+                color: #000;
+                border-bottom-right-radius: 4px;
+            }
+            .input-area {
+                display: flex;
+                gap: 12px;
+                padding: 20px;
+                background: rgba(255,255,255,0.05);
+                border-radius: 16px;
+                margin-top: auto;
+            }
+            #messageInput {
+                flex: 1;
+                background: rgba(255,255,255,0.1);
+                border: 1px solid rgba(255,255,255,0.2);
+                border-radius: 12px;
+                padding: 12px 16px;
+                color: white;
+                font-size: 16px;
+                outline: none;
+            }
+            #messageInput:focus { border-color: #4ade80; }
+            #messageInput::placeholder { color: #666; }
+            button {
+                background: linear-gradient(135deg, #4ade80, #22c55e);
+                border: none;
+                border-radius: 12px;
+                padding: 12px 24px;
+                color: #000;
+                font-weight: 600;
+                cursor: pointer;
+                transition: transform 0.2s;
+            }
+            button:hover { transform: scale(1.05); }
+            button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+            .typing { opacity: 0.7; font-style: italic; }
+            .suggestions {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 8px;
+                margin-bottom: 20px;
+            }
+            .suggestion {
+                background: rgba(255,255,255,0.1);
+                border: 1px solid rgba(255,255,255,0.2);
+                border-radius: 20px;
+                padding: 8px 16px;
+                font-size: 14px;
+                cursor: pointer;
+                transition: all 0.2s;
+            }
+            .suggestion:hover {
+                background: rgba(74, 222, 128, 0.2);
+                border-color: #4ade80;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="header">
+            <h1>&#129302; Platform Assistant</h1>
+            <p>AI-powered assistant for Alphonzo's Platform Engineering Lab</p>
+        </div>
+        <div class="chat-container">
+            <div class="suggestions">
+                <span class="suggestion" onclick="askQuestion('What services are running on this platform?')">What services are running?</span>
+                <span class="suggestion" onclick="askQuestion('Tell me about the tech stack')">Tech stack</span>
+                <span class="suggestion" onclick="askQuestion('How do I use the URL shortener?')">URL Shortener</span>
+                <span class="suggestion" onclick="askQuestion('What certifications does Alphonzo have?')">Certifications</span>
+            </div>
+            <div class="messages" id="messages">
+                <div class="message assistant">
+                    <div class="avatar">&#129302;</div>
+                    <div class="bubble">Hi! I'm the Platform Assistant. I can answer questions about Alphonzo's Platform Engineering Lab, the services running, tech stack, and more. How can I help you?</div>
+                </div>
+            </div>
+            <div class="input-area">
+                <input type="text" id="messageInput" placeholder="Ask me anything about the platform..." onkeypress="if(event.key==='Enter')sendMessage()">
+                <button onclick="sendMessage()" id="sendBtn">Send</button>
+            </div>
+        </div>
+        <script>
+            async function sendMessage() {
+                const input = document.getElementById('messageInput');
+                const message = input.value.trim();
+                if (!message) return;
+                
+                input.value = '';
+                addMessage(message, 'user');
+                
+                const btn = document.getElementById('sendBtn');
+                btn.disabled = true;
+                
+                const typingDiv = document.createElement('div');
+                typingDiv.className = 'message assistant';
+                typingDiv.innerHTML = '<div class="avatar">&#129302;</div><div class="bubble typing">Thinking...</div>';
+                document.getElementById('messages').appendChild(typingDiv);
+                scrollToBottom();
+                
+                try {
+                    const response = await fetch('/chat', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ message })
+                    });
+                    const data = await response.json();
+                    typingDiv.remove();
+                    addMessage(data.response, 'assistant');
+                } catch (error) {
+                    typingDiv.remove();
+                    addMessage('Sorry, I encountered an error. Please try again.', 'assistant');
+                }
+                
+                btn.disabled = false;
+            }
+            
+            function addMessage(text, type) {
+                const messagesDiv = document.getElementById('messages');
+                const div = document.createElement('div');
+                div.className = 'message ' + type;
+                const avatar = type === 'user' ? '&#128100;' : '&#129302;';
+                div.innerHTML = '<div class="avatar">' + avatar + '</div><div class="bubble">' + text.replace(/\\n/g, '<br>') + '</div>';
+                messagesDiv.appendChild(div);
+                scrollToBottom();
+            }
+            
+            function scrollToBottom() {
+                const messagesDiv = document.getElementById('messages');
+                messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            }
+            
+            function askQuestion(q) {
+                document.getElementById('messageInput').value = q;
+                sendMessage();
+            }
+        </script>
+    </body>
+    </html>
+        """
+
+    @app.post("/chat", response_model=ChatResponse)
+    async def chat(message: ChatMessage):
+        if not ANTHROPIC_API_KEY:
+            return ChatResponse(response="API key not configured. Please add your Anthropic API key.")
+        
+        try:
+            async with httpx.AsyncClient() as client:
+                response = await client.post(
+                    "https://api.anthropic.com/v1/messages",
+                    headers={
+                        "x-api-key": ANTHROPIC_API_KEY,
+                        "anthropic-version": "2023-06-01",
+                        "content-type": "application/json"
+                    },
+                    json={
+                        "model": "claude-3-haiku-20240307",
+                        "max_tokens": 1024,
+                        "system": SYSTEM_PROMPT,
+                        "messages": [
+                            {"role": "user", "content": message.message}
+                        ]
+                    },
+                    timeout=30.0
+                )
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    return ChatResponse(response=data["content"][0]["text"])
+                else:
+                    return ChatResponse(response=f"API error: {response.status_code}")
+        except Exception as e:
+            return ChatResponse(response=f"Error: {str(e)}")
+
+    @app.get("/health")
+    async def health():
+        return {"status": "healthy", "service": "Platform Assistant"}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: chatbot
+  namespace: chatbot
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: chatbot
+  template:
+    metadata:
+      labels:
+        app: chatbot
+    spec:
+      initContainers:
+      - name: install-deps
+        image: python:3.11-slim
+        command: ['sh', '-c', 'pip install --target=/app-deps fastapi uvicorn httpx pydantic']
+        volumeMounts:
+        - name: app-deps
+          mountPath: /app-deps
+      containers:
+      - name: api
+        image: python:3.11-slim
+        command: ['sh', '-c', 'export PYTHONPATH=/app-deps:$PYTHONPATH && cd /app && python -m uvicorn app:app --host 0.0.0.0 --port 8000']
+        ports:
+        - containerPort: 8000
+        env:
+        - name: ANTHROPIC_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: chatbot-secret
+              key: ANTHROPIC_API_KEY
+        volumeMounts:
+        - name: app-code
+          mountPath: /app
+        - name: app-deps
+          mountPath: /app-deps
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "50m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+      volumes:
+      - name: app-code
+        configMap:
+          name: chatbot-code
+      - name: app-deps
+        emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: chatbot
+  namespace: chatbot
+spec:
+  selector:
+    app: chatbot
+  ports:
+  - port: 80
+    targetPort: 8000
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: chatbot
+  namespace: chatbot
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: chat.alphonzojonesjr.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: chatbot
+            port:
+              number: 80
