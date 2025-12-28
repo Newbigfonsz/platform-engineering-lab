@@ -7,9 +7,8 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: chatbot-secret
-  namespace: chatbot
+  namespace: chat
 stringData:
-  ANTHROPIC_API_KEY: "your-api-key-here"
 ---
 apiVersion: v1
 kind: ConfigMap
