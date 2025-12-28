@@ -38,11 +38,7 @@ spec:
           subPath: postgres
       volumes:
       - name: postgres-storage
-        hostPath:
-          path: /mnt/data/postgres
-          type: DirectoryOrCreate
-      nodeSelector:
-        kubernetes.io/hostname: k8s-worker01
+        emptyDir: {}
 ---
 apiVersion: v1
 kind: Service
@@ -55,4 +51,3 @@ spec:
   ports:
   - port: 5432
     targetPort: 5432
-  type: ClusterIP
