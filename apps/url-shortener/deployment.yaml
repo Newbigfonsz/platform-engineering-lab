@@ -1,0 +1,230 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: url-shortener
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: postgres-secret
+  namespace: url-shortener
+stringData:
+  POSTGRES_USER: shortener
+  POSTGRES_PASSWORD: shortener123
+  POSTGRES_DB: shortener
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-code
+  namespace: url-shortener
+data:
+  app.py: |
+    from fastapi import FastAPI, HTTPException, Request
+    from fastapi.responses import RedirectResponse
+    from pydantic import BaseModel, HttpUrl
+    import asyncpg
+    import hashlib
+    import os
+
+    app = FastAPI(title="URL Shortener", description="Alphonzo's URL Shortener API")
+
+    DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://shortener:shortener123@postgres:5432/shortener")
+
+    class URLCreate(BaseModel):
+        url: HttpUrl
+
+    class URLResponse(BaseModel):
+        short_code: str
+        short_url: str
+        original_url: str
+        clicks: int
+
+    async def get_db():
+        return await asyncpg.connect(DATABASE_URL)
+
+    @app.on_event("startup")
+    async def startup():
+        conn = await get_db()
+        await conn.execute('''
+            CREATE TABLE IF NOT EXISTS urls (
+                id SERIAL PRIMARY KEY,
+                short_code VARCHAR(10) UNIQUE NOT NULL,
+                original_url TEXT NOT NULL,
+                clicks INTEGER DEFAULT 0,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
+        await conn.close()
+
+    @app.get("/")
+    async def root():
+        return {"message": "URL Shortener API", "author": "Alphonzo Jones Jr.", "docs": "/docs"}
+
+    @app.post("/shorten", response_model=URLResponse)
+    async def shorten_url(url_data: URLCreate, request: Request):
+        conn = await get_db()
+        short_code = hashlib.md5(str(url_data.url).encode()).hexdigest()[:6]
+        existing = await conn.fetchrow("SELECT * FROM urls WHERE short_code = $1", short_code)
+        if existing:
+            await conn.close()
+            base_url = str(request.base_url)
+            return URLResponse(short_code=short_code, short_url=f"{base_url}r/{short_code}", original_url=str(url_data.url), clicks=existing['clicks'])
+        await conn.execute("INSERT INTO urls (short_code, original_url) VALUES ($1, $2)", short_code, str(url_data.url))
+        await conn.close()
+        base_url = str(request.base_url)
+        return URLResponse(short_code=short_code, short_url=f"{base_url}r/{short_code}", original_url=str(url_data.url), clicks=0)
+
+    @app.get("/r/{short_code}")
+    async def redirect_url(short_code: str):
+        conn = await get_db()
+        url = await conn.fetchrow("SELECT * FROM urls WHERE short_code = $1", short_code)
+        if not url:
+            await conn.close()
+            raise HTTPException(status_code=404, detail="URL not found")
+        await conn.execute("UPDATE urls SET clicks = clicks + 1 WHERE short_code = $1", short_code)
+        await conn.close()
+        return RedirectResponse(url=url['original_url'])
+
+    @app.get("/stats/{short_code}", response_model=URLResponse)
+    async def get_stats(short_code: str, request: Request):
+        conn = await get_db()
+        url = await conn.fetchrow("SELECT * FROM urls WHERE short_code = $1", short_code)
+        if not url:
+            await conn.close()
+            raise HTTPException(status_code=404, detail="URL not found")
+        await conn.close()
+        base_url = str(request.base_url)
+        return URLResponse(short_code=short_code, short_url=f"{base_url}r/{short_code}", original_url=url['original_url'], clicks=url['clicks'])
+
+    @app.get("/all")
+    async def list_all():
+        conn = await get_db()
+        urls = await conn.fetch("SELECT short_code, original_url, clicks, created_at FROM urls ORDER BY created_at DESC LIMIT 50")
+        await conn.close()
+        return [dict(u) for u in urls]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres
+  namespace: url-shortener
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:15-alpine
+        ports:
+        - containerPort: 5432
+        envFrom:
+        - secretRef:
+            name: postgres-secret
+        volumeMounts:
+        - name: data
+          mountPath: /var/lib/postgresql/data
+          subPath: postgres
+      volumes:
+      - name: data
+        emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+  namespace: url-shortener
+spec:
+  selector:
+    app: postgres
+  ports:
+  - port: 5432
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: url-shortener
+  namespace: url-shortener
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: url-shortener
+  template:
+    metadata:
+      labels:
+        app: url-shortener
+    spec:
+      initContainers:
+      - name: install-deps
+        image: python:3.11-slim
+        command: ['sh', '-c', 'pip install --target=/app-deps fastapi uvicorn asyncpg pydantic']
+        volumeMounts:
+        - name: app-deps
+          mountPath: /app-deps
+      containers:
+      - name: api
+        image: python:3.11-slim
+        command: ['sh', '-c', 'export PYTHONPATH=/app-deps:$PYTHONPATH && cd /app && python -m uvicorn app:app --host 0.0.0.0 --port 8000']
+        ports:
+        - containerPort: 8000
+        env:
+        - name: DATABASE_URL
+          value: "postgresql://shortener:shortener123@postgres:5432/shortener"
+        volumeMounts:
+        - name: app-code
+          mountPath: /app
+        - name: app-deps
+          mountPath: /app-deps
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "50m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+      volumes:
+      - name: app-code
+        configMap:
+          name: app-code
+      - name: app-deps
+        emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: url-shortener
+  namespace: url-shortener
+spec:
+  selector:
+    app: url-shortener
+  ports:
+  - port: 80
+    targetPort: 8000
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: url-shortener
+  namespace: url-shortener
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: short.alphonzojonesjr.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: url-shortener
+            port:
+              number: 80
