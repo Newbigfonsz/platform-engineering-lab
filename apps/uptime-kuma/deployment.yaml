@@ -23,7 +23,8 @@ spec:
           mountPath: /app/data
       volumes:
       - name: data
-        emptyDir: {}
+        persistentVolumeClaim:
+        claimName: uptime-kuma-data
 ---
 apiVersion: v1
 kind: Service
