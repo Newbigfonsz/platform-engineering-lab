@@ -1,0 +1,28 @@
+name: ArgoCD Sync
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'apps/**'
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Notify Discord - Deployment Started
+        run: |
+          curl -H "Content-Type: application/json" \
+            -d '{"content": "🚀 **Deployment Started**\nRepository: ${{ github.repository }}\nBranch: ${{ github.ref_name }}\nCommit: ${{ github.sha }}"}' \
+            ${{ secrets.DISCORD_WEBHOOK }}
+
+      - name: Wait for ArgoCD Auto-Sync
+        run: |
+          echo "ArgoCD will auto-sync from GitHub..."
+          sleep 30
+
+      - name: Notify Discord - Deployment Complete
+        run: |
+          curl -H "Content-Type: application/json" \
+            -d '{"content": "✅ **Deployment Complete**\nRepository: ${{ github.repository }}\nCommit: ${{ github.sha }}"}' \
+            ${{ secrets.DISCORD_WEBHOOK }}
