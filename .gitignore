@@ -1,4 +1,33 @@
+<<<<<<< HEAD
 *.swp
 *.swo
 *~
 .DS_Store
+=======
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+.terraform.lock.hcl
+
+# Secrets
+**/secrets.yaml
+**/secret.yaml
+*-secret.yaml
+
+# Backups
+backups/
+*.sql
+*.tar.gz
+
+# OS
+.DS_Store
+*.swp
+*.swo
+
+# IDE
+.idea/
+.vscode/
+terraform.tfvars
+>>>>>>> 0398f75dc95ce9c136a96ea8e547ce18ab45a2e6

@@ -1,0 +1,18 @@
+ingress:
+  - hostname: taskapp.alphonzojonesjr.com
+    service: https://10.10.0.105:443
+    originRequest:
+      noTLSVerify: true
+
+  - hostname: argocd.alphonzojonesjr.com
+    service: https://10.10.0.105:443
+    originRequest:
+      noTLSVerify: true
+
+  - hostname: grafana.alphonzojonesjr.com
+    service: https://10.10.0.105:443
+    originRequest:
+      noTLSVerify: true
+
+  - service: http_status:404
+

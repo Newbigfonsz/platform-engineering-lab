@@ -1,0 +1,40 @@
+---
+- name: Clean up and optimize all nodes
+  hosts: k8s_all,docker
+  become: yes
+  tasks:
+    - name: Update package cache
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+
+    - name: Upgrade all packages
+      apt:
+        upgrade: dist
+        autoremove: yes
+        autoclean: yes
+
+    - name: Remove unused packages
+      apt:
+        autoremove: yes
+        purge: yes
+
+    - name: Clean apt cache
+      apt:
+        autoclean: yes
+
+    - name: Remove old kernels (keep current + 1)
+      shell: |
+        apt autoremove --purge -y
+        apt clean
+
+    - name: Clear journal logs older than 7 days
+      shell: journalctl --vacuum-time=7d
+
+    - name: Check disk usage
+      shell: df -h /
+      register: disk_usage
+
+    - name: Display disk usage
+      debug:
+        msg: "{{ disk_usage.stdout_lines }}"

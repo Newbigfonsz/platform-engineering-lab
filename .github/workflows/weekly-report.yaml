@@ -1,0 +1,19 @@
+name: Weekly Status Report
+
+on:
+  schedule:
+    - cron: '0 9 * * 1'  # Every Monday at 9 AM
+  workflow_dispatch:
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate Report
+        run: |
+          echo "# Weekly Platform Report"
+          echo "Generated: $(date)"
+          echo ""
+          echo "## Services"
+          echo "- Status Page: https://status.alphonzojonesjr.com/status/status"
+          echo "- All services monitored by Uptime Kuma"

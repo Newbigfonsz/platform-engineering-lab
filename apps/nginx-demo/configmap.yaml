@@ -1,0 +1,51 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-demo-html
+  namespace: nginx-demo
+data:
+  index.html: |
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <title>Platform Engineering Lab</title>
+        <style>
+            body { font-family: Arial, sans-serif; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: white; min-height: 100vh; display: flex; justify-content: center; align-items: center; margin: 0; }
+            .container { text-align: center; padding: 40px; max-width: 900px; }
+            h1 { font-size: 3em; margin-bottom: 20px; background: linear-gradient(90deg, #4ade80, #60a5fa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+            .rocket { animation: bounce 2s infinite; margin-bottom: 20px; }
+            @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-20px); } }
+            .subtitle { font-size: 1.2em; color: #a0a0a0; margin-bottom: 40px; }
+            .services { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-top: 30px; }
+            .service { background: rgba(255,255,255,0.1); padding: 20px; border-radius: 12px; transition: all 0.3s; border: 1px solid rgba(255,255,255,0.1); }
+            .service:hover { transform: translateY(-5px); background: rgba(255,255,255,0.15); border-color: #4ade80; box-shadow: 0 10px 30px rgba(74, 222, 128, 0.2); }
+            a { color: #4ade80; text-decoration: none; font-weight: 600; }
+            .footer { margin-top: 50px; color: #666; }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <svg class="rocket" width="80" height="80" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M32 4C32 4 16 20 16 40C16 44 18 48 22 52L26 48C26 48 28 52 32 52C36 52 38 48 38 48L42 52C46 48 48 44 48 40C48 20 32 4 32 4Z" fill="#4ade80"/>
+                <circle cx="32" cy="28" r="6" fill="#1a1a2e"/>
+                <path d="M22 52L18 60L26 56L22 52Z" fill="#60a5fa"/>
+                <path d="M42 52L46 60L38 56L42 52Z" fill="#60a5fa"/>
+                <path d="M28 52L32 60L36 52C36 52 34 54 32 54C30 54 28 52 28 52Z" fill="#ff6b6b"/>
+            </svg>
+            <h1>Platform Engineering Lab</h1>
+            <p class="subtitle">Enterprise-grade Kubernetes Infrastructure</p>
+            <div class="services">
+                <div class="service"><a href="https://web.alphonzojonesjr.com">Portfolio</a></div>
+                <div class="service"><a href="https://taskapp.alphonzojonesjr.com">TaskApp</a></div>
+                <div class="service"><a href="https://argocd.alphonzojonesjr.com">ArgoCD</a></div>
+                <div class="service"><a href="https://grafana.alphonzojonesjr.com">Grafana</a></div>
+                <div class="service"><a href="https://vault.alphonzojonesjr.com">Vault</a></div>
+                <div class="service"><a href="https://status.alphonzojonesjr.com/status/status">Status</a></div>
+                <div class="service"><a href="https://pulse.alphonzojonesjr.com">Pulse</a></div>
+                <div class="service"><a href="https://k8s.alphonzojonesjr.com">K8s Dashboard</a></div>
+            </div>
+            <p class="footer">Alphonzo Jones Jr. | 2025</p>
+        </div>
+    </body>
+    </html>

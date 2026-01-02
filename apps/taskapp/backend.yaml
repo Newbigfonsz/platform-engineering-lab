@@ -1,0 +1,157 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: taskapp-backend
+  namespace: taskapp
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: taskapp-backend
+  template:
+    metadata:
+      labels:
+        app: taskapp-backend
+    spec:
+      containers:
+      - name: backend
+        image: node:18-alpine
+        command: ["/bin/sh", "-c"]
+        args:
+          - |
+            cat > package.json << 'PKGEOF'
+            {
+              "name": "taskapp-backend",
+              "version": "1.0.0",
+              "main": "server.js",
+              "scripts": {
+                "start": "node server.js"
+              }
+            }
+            PKGEOF
+            
+            npm install express pg cors
+            
+            cat > server.js << 'SRVEOF'
+            const express = require('express');
+            const { Pool } = require('pg');
+            const cors = require('cors');
+            
+            const app = express();
+            app.use(cors());
+            app.use(express.json());
+            
+            const pool = new Pool({
+              host: process.env.DATABASE_HOST,
+              port: process.env.DATABASE_PORT,
+              user: process.env.DATABASE_USER,
+              password: process.env.DATABASE_PASSWORD,
+              database: process.env.DATABASE_NAME,
+            });
+            
+            pool.query(`
+              CREATE TABLE IF NOT EXISTS tasks (
+                id SERIAL PRIMARY KEY,
+                title TEXT NOT NULL,
+                completed BOOLEAN DEFAULT FALSE,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+              )
+            `).then(() => {
+              console.log('✅ Database initialized');
+            }).catch(err => {
+              console.error('Database initialization error:', err);
+            });
+            
+            app.get('/api/tasks', async (req, res) => {
+              try {
+                const result = await pool.query('SELECT * FROM tasks ORDER BY created_at DESC');
+                res.json(result.rows);
+              } catch (err) {
+                res.status(500).json({ error: err.message });
+              }
+            });
+            
+            app.post('/api/tasks', async (req, res) => {
+              try {
+                const { title } = req.body;
+                const result = await pool.query(
+                  'INSERT INTO tasks (title) VALUES ($1) RETURNING *',
+                  [title]
+                );
+                res.json(result.rows[0]);
+              } catch (err) {
+                res.status(500).json({ error: err.message });
+              }
+            });
+            
+            app.patch('/api/tasks/:id', async (req, res) => {
+              try {
+                const { id } = req.params;
+                const { completed } = req.body;
+                const result = await pool.query(
+                  'UPDATE tasks SET completed = $1 WHERE id = $2 RETURNING *',
+                  [completed, id]
+                );
+                res.json(result.rows[0]);
+              } catch (err) {
+                res.status(500).json({ error: err.message });
+              }
+            });
+            
+            app.delete('/api/tasks/:id', async (req, res) => {
+              try {
+                const { id } = req.params;
+                await pool.query('DELETE FROM tasks WHERE id = $1', [id]);
+                res.json({ success: true });
+              } catch (err) {
+                res.status(500).json({ error: err.message });
+              }
+            });
+            
+            app.listen(3000, () => {
+              console.log('🚀 Backend API running on port 3000');
+            });
+            SRVEOF
+            
+            node server.js
+        env:
+        - name: DATABASE_HOST
+          value: postgres
+        - name: DATABASE_PORT
+          value: "5432"
+        - name: DATABASE_USER
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret
+              key: POSTGRES_USER
+        - name: DATABASE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret
+              key: POSTGRES_PASSWORD
+        - name: DATABASE_NAME
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret
+              key: POSTGRES_DB
+        ports:
+        - containerPort: 3000
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: taskapp-backend
+  namespace: taskapp
+spec:
+  selector:
+    app: taskapp-backend
+  ports:
+  - port: 3000
+    targetPort: 3000
