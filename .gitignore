@@ -31,3 +31,8 @@ backups/
 .vscode/
 terraform.tfvars
 >>>>>>> 0398f75dc95ce9c136a96ea8e547ce18ab45a2e6
+# Secrets
+*-secret.yaml
+*secrets*.yaml
+*.key
+*.pem

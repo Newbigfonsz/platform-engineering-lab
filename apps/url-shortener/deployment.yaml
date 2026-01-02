@@ -10,7 +10,7 @@ metadata:
   namespace: url-shortener
 stringData:
   POSTGRES_USER: shortener
-  POSTGRES_PASSWORD: shortener123
+  POSTGRES_PASSWORD: CHANGE_ME_IN_PRODUCTION
   POSTGRES_DB: shortener
 ---
 apiVersion: v1
