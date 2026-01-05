@@ -1,0 +1,66 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: dashboard-html
+  namespace: dashboard
+data:
+  index.html: |
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Platform Ops Center</title>
+        <style>
+            body { font-family: 'Inter', sans-serif; background: #0b0b0b; color: #e0e0e0; padding: 40px; }
+            .grid { display: grid; grid-template-columns: 1fr 2fr; gap: 20px; }
+            .card { background: #161616; padding: 25px; border-radius: 12px; border: 1px solid #2a2a2a; }
+            .status { padding: 10px; border-radius: 6px; font-weight: bold; text-align: center; margin-bottom: 20px; }
+            .unsealed { background: #064e3b; color: #6ee7b7; }
+            .sealed { background: #7f1d1d; color: #fca5a5; }
+            button { background: #2563eb; color: white; border: none; padding: 12px; border-radius: 6px; cursor: pointer; width: 100%; font-weight: bold; }
+            input { background: #2a2a2a; color: white; border: 1px solid #444; padding: 10px; border-radius: 6px; width: 80%; margin-bottom: 10px; }
+            table { width: 100%; border-collapse: collapse; }
+            td { padding: 8px; border-bottom: 1px solid #222; font-size: 0.85em; }
+        </style>
+    </head>
+    <body>
+        <h1>Platform Ops Center</h1>
+        <div class="grid">
+            <div class="card">
+                <h3>Security: Vault</h3>
+                <div id="v-status" class="status">Loading...</div>
+                <hr style="border: 0.5px solid #333; margin: 20px 0;">
+                <h3>Scale TaskApp</h3>
+                <input type="number" id="repCount" value="2" min="1">
+                <button onclick="scale()">Apply Scaling</button>
+            </div>
+            <div class="card">
+                <h3>System Workloads</h3>
+                <table><tbody id="p-body"></tbody></table>
+            </div>
+        </div>
+        <script>
+            async function refresh() {
+                const res = await fetch('/api/status');
+                const data = await res.json();
+                
+                const v = document.getElementById('v-status');
+                v.innerText = data.vault;
+                v.className = 'status ' + (data.vault === 'Unsealed' ? 'unsealed' : 'sealed');
+                
+                document.getElementById('p-body').innerHTML = data.pods.slice(0,12).map(p => 
+                    `<tr><td>${p.name}</td><td>${p.status}</td></tr>`
+                ).join('');
+            }
+            async function scale() {
+                const c = document.getElementById('repCount').value;
+                await fetch('/api/scale', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({name: 'taskapp-frontend', namespace: 'taskapp', replicas: c})
+                });
+                alert("Scale request sent!");
+            }
+            setInterval(refresh, 5000); refresh();
+        </script>
+    </body>
+    </html>

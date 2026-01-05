@@ -1,0 +1,30 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: dashboard-ingress
+  namespace: dashboard
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    # This rewrite is CRITICAL for the sidecar to work
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+spec:
+  rules:
+  - host: alphonzojonesjr.com
+    http:
+      paths:
+      # Capture everything after /api/ and send it to the sidecar
+      - path: /api(/|$)(.*)
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: resource-api
+            port:
+              number: 5000
+      # Capture everything else for the frontend
+      - path: /()(.*)
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: dashboard
+            port:
+              number: 80

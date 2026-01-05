@@ -1,0 +1,79 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: dashboard-html
+  namespace: dashboard
+data:
+  index.html: |
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Platform Ops Center</title>
+        <style>
+            body { font-family: 'Inter', sans-serif; background: #0b0b0b; color: #e0e0e0; padding: 20px; }
+            .grid { display: grid; grid-template-columns: 1fr 2fr; gap: 20px; }
+            .card { background: #161616; padding: 20px; border-radius: 12px; border: 1px solid #2a2a2a; }
+            table { width: 100%; border-collapse: collapse; }
+            td { padding: 10px; border-bottom: 1px solid #222; font-size: 0.85em; }
+            .log-link { color: #3b82f6; cursor: pointer; font-weight: bold; }
+            #log-viewer { position: fixed; top: 10%; left: 10%; width: 80%; height: 80%; background: #000; border: 2px solid #333; display: none; padding: 20px; z-index: 1000; box-shadow: 0 0 50px rgba(0,0,0,0.9); }
+            #log-content { white-space: pre-wrap; height: 90%; overflow-y: auto; font-family: 'Courier New', monospace; color: #00ff00; font-size: 13px; margin-top: 15px; }
+            .close-btn { color: #ff4d4d; float: right; cursor: pointer; font-size: 20px; }
+        </style>
+    </head>
+    <body>
+        <h1>Platform Ops Center</h1>
+        <div class="grid">
+            <div class="card">
+                <h3>System Controls</h3>
+                <div id="v-status" style="padding:10px; border-radius:5px; text-align:center;">Vault: Loading...</div>
+                <hr style="border:0.5px solid #333; margin:20px 0;">
+                <p>Scale TaskApp Frontend</p>
+                <input type="number" id="repCount" value="2" style="background:#333; color:white; border:none; padding:8px; border-radius:4px; width:60px;">
+                <button onclick="scale()" style="background:#2563eb; color:white; border:none; padding:8px 15px; border-radius:4px; cursor:pointer;">Apply</button>
+            </div>
+            <div class="card">
+                <h3>Live Workload Monitor</h3>
+                <table><tbody id="p-body"></tbody></table>
+            </div>
+        </div>
+        <div id="log-viewer">
+            <span class="close-btn" onclick="document.getElementById('log-viewer').style.display='none'">✖ Close</span>
+            <h3 id="log-title">Pod Logs</h3>
+            <div id="log-content">Initializing log stream...</div>
+        </div>
+        <script>
+            async function refresh() {
+                const res = await fetch('/api/status');
+                const data = await res.json();
+                const v = document.getElementById('v-status');
+                v.innerText = `Vault: ${data.vault}`;
+                v.style.background = data.vault === 'Unsealed' ? '#064e3b' : '#7f1d1d';
+                
+                document.getElementById('p-body').innerHTML = data.pods.slice(0,15).map(p => 
+                    `<tr><td>${p.name}</td><td style="color:#888;">${p.status}</td><td><span class="log-link" onclick="showLogs('${p.ns}', '${p.name}')">View Logs</span></td></tr>`
+                ).join('');
+            }
+            async function showLogs(ns, name) {
+                const modal = document.getElementById('log-viewer');
+                const content = document.getElementById('log-content');
+                document.getElementById('log-title').innerText = `Logs: ${name}`;
+                modal.style.display = 'block';
+                content.innerText = 'Fetching logs from Kubernetes API...';
+                const res = await fetch(`/api/logs/${ns}/${name}`);
+                const data = await res.json();
+                content.innerText = data.logs || "No logs found or permission denied.";
+            }
+            async function scale() {
+                const c = document.getElementById('repCount').value;
+                await fetch('/api/scale', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({name: 'taskapp-frontend', namespace: 'taskapp', replicas: c})
+                });
+                alert("Scaling command issued.");
+            }
+            setInterval(refresh, 5000); refresh();
+        </script>
+    </body>
+    </html>
