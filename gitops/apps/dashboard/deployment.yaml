@@ -1,0 +1,81 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    deployment.kubernetes.io/revision: "10"
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"apps/v1","kind":"Deployment","metadata":{"annotations":{},"name":"dashboard","namespace":"dashboard"},"spec":{"replicas":2,"selector":{"matchLabels":{"app":"dashboard"}},"template":{"metadata":{"labels":{"app":"dashboard"}},"spec":{"containers":[{"image":"nginx:alpine","name":"nginx","ports":[{"containerPort":80}],"resources":{"limits":{"cpu":"50m","memory":"64Mi"},"requests":{"cpu":"10m","memory":"32Mi"}},"volumeMounts":[{"mountPath":"/usr/share/nginx/html","name":"html"}]}],"volumes":[{"configMap":{"name":"dashboard-html"},"name":"html"}]}}}}
+  creationTimestamp: "2026-01-02T20:39:12Z"
+  generation: 11
+  name: dashboard
+  namespace: dashboard
+  resourceVersion: "5695260"
+  uid: ee246eaf-b8d3-4417-9fb6-1e27e73271cd
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: dashboard
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      annotations:
+        kubectl.kubernetes.io/restartedAt: "2026-01-10T20:19:40Z"
+      creationTimestamp: null
+      labels:
+        app: dashboard
+    spec:
+      containers:
+      - image: nginx:alpine
+        imagePullPolicy: IfNotPresent
+        name: nginx
+        ports:
+        - containerPort: 80
+          protocol: TCP
+        resources:
+          limits:
+            cpu: 50m
+            memory: 64Mi
+          requests:
+            cpu: 10m
+            memory: 32Mi
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        volumeMounts:
+        - mountPath: /usr/share/nginx/html
+          name: html
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - configMap:
+          defaultMode: 420
+          name: dashboard-html
+        name: html
+status:
+  availableReplicas: 1
+  conditions:
+  - lastTransitionTime: "2026-01-02T20:39:12Z"
+    lastUpdateTime: "2026-01-10T20:20:17Z"
+    message: ReplicaSet "dashboard-57bd57f49f" has successfully progressed.
+    reason: NewReplicaSetAvailable
+    status: "True"
+    type: Progressing
+  - lastTransitionTime: "2026-01-10T21:43:25Z"
+    lastUpdateTime: "2026-01-10T21:43:25Z"
+    message: Deployment has minimum availability.
+    reason: MinimumReplicasAvailable
+    status: "True"
+    type: Available
+  observedGeneration: 11
+  readyReplicas: 1
+  replicas: 1
+  updatedReplicas: 1

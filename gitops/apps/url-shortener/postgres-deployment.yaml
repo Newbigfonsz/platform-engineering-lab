@@ -1,0 +1,76 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    argocd.argoproj.io/tracking-id: url-shortener:apps/Deployment:url-shortener/postgres
+    deployment.kubernetes.io/revision: "1"
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"apps/v1","kind":"Deployment","metadata":{"annotations":{"argocd.argoproj.io/tracking-id":"url-shortener:apps/Deployment:url-shortener/postgres"},"name":"postgres","namespace":"url-shortener"},"spec":{"replicas":1,"selector":{"matchLabels":{"app":"postgres"}},"template":{"metadata":{"labels":{"app":"postgres"}},"spec":{"containers":[{"envFrom":[{"secretRef":{"name":"postgres-secret"}}],"image":"postgres:15-alpine","name":"postgres","ports":[{"containerPort":5432}],"volumeMounts":[{"mountPath":"/var/lib/postgresql/data","name":"data","subPath":"postgres"}]}],"volumes":[{"emptyDir":{},"name":"data"}]}}}}
+  creationTimestamp: "2025-12-28T08:01:43Z"
+  generation: 1
+  name: postgres
+  namespace: url-shortener
+  resourceVersion: "5694982"
+  uid: 2339c7d6-7158-4533-801d-eadb21948618
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: postgres
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: postgres
+    spec:
+      containers:
+      - envFrom:
+        - secretRef:
+            name: postgres-secret
+        image: postgres:15-alpine
+        imagePullPolicy: IfNotPresent
+        name: postgres
+        ports:
+        - containerPort: 5432
+          protocol: TCP
+        resources: {}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        volumeMounts:
+        - mountPath: /var/lib/postgresql/data
+          name: data
+          subPath: postgres
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - emptyDir: {}
+        name: data
+status:
+  availableReplicas: 1
+  conditions:
+  - lastTransitionTime: "2025-12-28T08:01:43Z"
+    lastUpdateTime: "2025-12-28T08:01:48Z"
+    message: ReplicaSet "postgres-b559c656f" has successfully progressed.
+    reason: NewReplicaSetAvailable
+    status: "True"
+    type: Progressing
+  - lastTransitionTime: "2026-01-10T21:43:16Z"
+    lastUpdateTime: "2026-01-10T21:43:16Z"
+    message: Deployment has minimum availability.
+    reason: MinimumReplicasAvailable
+    status: "True"
+    type: Available
+  observedGeneration: 1
+  readyReplicas: 1
+  replicas: 1
+  updatedReplicas: 1

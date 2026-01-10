@@ -1,0 +1,34 @@
+apiVersion: v1
+items:
+- apiVersion: networking.k8s.io/v1
+  kind: Ingress
+  metadata:
+    annotations:
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"networking.k8s.io/v1","kind":"Ingress","metadata":{"annotations":{},"name":"filebrowser-ingress","namespace":"filebrowser"},"spec":{"ingressClassName":"nginx","rules":[{"host":"files.alphonzojonesjr.com","http":{"paths":[{"backend":{"service":{"name":"filebrowser","port":{"number":80}}},"path":"/","pathType":"Prefix"}]}}]}}
+    creationTimestamp: "2026-01-10T20:32:51Z"
+    generation: 1
+    name: filebrowser-ingress
+    namespace: filebrowser
+    resourceVersion: "5695623"
+    uid: 64a5b2b8-c10f-424d-8e69-a399365c60ba
+  spec:
+    ingressClassName: nginx
+    rules:
+    - host: files.alphonzojonesjr.com
+      http:
+        paths:
+        - backend:
+            service:
+              name: filebrowser
+              port:
+                number: 80
+          path: /
+          pathType: Prefix
+  status:
+    loadBalancer:
+      ingress:
+      - ip: 10.10.0.104
+kind: List
+metadata:
+  resourceVersion: ""

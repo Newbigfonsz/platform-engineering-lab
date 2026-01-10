@@ -1,0 +1,108 @@
+apiVersion: v1
+items:
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      auth.istio.io/8089: NONE
+    creationTimestamp: "2026-01-10T02:51:45Z"
+    generateName: cm-acme-http-solver-
+    labels:
+      acme.cert-manager.io/http-domain: "2716928821"
+      acme.cert-manager.io/http-token: "1164316415"
+      acme.cert-manager.io/http01-solver: "true"
+    name: cm-acme-http-solver-snxjl
+    namespace: dashboard
+    ownerReferences:
+    - apiVersion: acme.cert-manager.io/v1
+      blockOwnerDeletion: true
+      controller: true
+      kind: Challenge
+      name: dash-alphonzojonesjr-com-tls-1-1539780268-2239430186
+      uid: 4e55297e-7044-4e19-bbe3-9c240071c121
+    resourceVersion: "5466436"
+    uid: 5fc8603c-5815-4911-8c3a-91f23892bbb6
+  spec:
+    clusterIP: 10.97.40.139
+    clusterIPs:
+    - 10.97.40.139
+    externalTrafficPolicy: Cluster
+    internalTrafficPolicy: Cluster
+    ipFamilies:
+    - IPv4
+    ipFamilyPolicy: SingleStack
+    ports:
+    - name: http
+      nodePort: 32595
+      port: 8089
+      protocol: TCP
+      targetPort: 8089
+    selector:
+      acme.cert-manager.io/http-domain: "2716928821"
+      acme.cert-manager.io/http-token: "1164316415"
+      acme.cert-manager.io/http01-solver: "true"
+    sessionAffinity: None
+    type: NodePort
+  status:
+    loadBalancer: {}
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"v1","kind":"Service","metadata":{"annotations":{},"name":"dashboard","namespace":"dashboard"},"spec":{"ports":[{"port":80,"targetPort":80}],"selector":{"app":"dashboard"}}}
+    creationTimestamp: "2026-01-02T20:39:12Z"
+    name: dashboard
+    namespace: dashboard
+    resourceVersion: "3249874"
+    uid: 98ea574d-8b8b-48e7-b673-9f95b7d3300c
+  spec:
+    clusterIP: 10.110.172.226
+    clusterIPs:
+    - 10.110.172.226
+    internalTrafficPolicy: Cluster
+    ipFamilies:
+    - IPv4
+    ipFamilyPolicy: SingleStack
+    ports:
+    - port: 80
+      protocol: TCP
+      targetPort: 80
+    selector:
+      app: dashboard
+    sessionAffinity: None
+    type: ClusterIP
+  status:
+    loadBalancer: {}
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"v1","kind":"Service","metadata":{"annotations":{},"name":"resource-api","namespace":"dashboard"},"spec":{"ports":[{"port":5000,"protocol":"TCP","targetPort":5000}],"selector":{"app":"resource-api"}}}
+    creationTimestamp: "2026-01-02T22:49:51Z"
+    name: resource-api
+    namespace: dashboard
+    resourceVersion: "3284507"
+    uid: df64a216-a467-4f6b-bee7-0c3cb9294431
+  spec:
+    clusterIP: 10.96.181.246
+    clusterIPs:
+    - 10.96.181.246
+    internalTrafficPolicy: Cluster
+    ipFamilies:
+    - IPv4
+    ipFamilyPolicy: SingleStack
+    ports:
+    - port: 5000
+      protocol: TCP
+      targetPort: 5000
+    selector:
+      app: resource-api
+    sessionAffinity: None
+    type: ClusterIP
+  status:
+    loadBalancer: {}
+kind: List
+metadata:
+  resourceVersion: ""

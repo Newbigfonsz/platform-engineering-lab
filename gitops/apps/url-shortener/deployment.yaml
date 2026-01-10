@@ -1,0 +1,108 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    argocd.argoproj.io/tracking-id: url-shortener:apps/Deployment:url-shortener/url-shortener
+    deployment.kubernetes.io/revision: "3"
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"apps/v1","kind":"Deployment","metadata":{"annotations":{"argocd.argoproj.io/tracking-id":"url-shortener:apps/Deployment:url-shortener/url-shortener"},"name":"url-shortener","namespace":"url-shortener"},"spec":{"replicas":2,"selector":{"matchLabels":{"app":"url-shortener"}},"template":{"metadata":{"labels":{"app":"url-shortener"}},"spec":{"containers":[{"command":["sh","-c","export PYTHONPATH=/app-deps:$PYTHONPATH \u0026\u0026 cd /app \u0026\u0026 python -m uvicorn app:app --host 0.0.0.0 --port 8000"],"env":[{"name":"DATABASE_URL","value":"postgresql://shortener:shortener123@postgres:5432/shortener"}],"image":"python:3.11-slim","name":"api","ports":[{"containerPort":8000}],"resources":{"limits":{"cpu":"200m","memory":"256Mi"},"requests":{"cpu":"50m","memory":"64Mi"}},"volumeMounts":[{"mountPath":"/app","name":"app-code"},{"mountPath":"/app-deps","name":"app-deps"}]}],"initContainers":[{"command":["sh","-c","pip install --target=/app-deps fastapi uvicorn asyncpg pydantic"],"image":"python:3.11-slim","name":"install-deps","volumeMounts":[{"mountPath":"/app-deps","name":"app-deps"}]}],"volumes":[{"configMap":{"name":"app-code"},"name":"app-code"},{"emptyDir":{},"name":"app-deps"}]}}}}
+  creationTimestamp: "2025-12-28T08:01:43Z"
+  generation: 10
+  name: url-shortener
+  namespace: url-shortener
+  resourceVersion: "5695250"
+  uid: c002a27a-cce7-417f-87d1-a810a3c39c58
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: url-shortener
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      annotations:
+        kubectl.kubernetes.io/restartedAt: "2026-01-09T15:49:52Z"
+      creationTimestamp: null
+      labels:
+        app: url-shortener
+    spec:
+      containers:
+      - command:
+        - sh
+        - -c
+        - export PYTHONPATH=/app-deps:$PYTHONPATH && cd /app && python -m uvicorn
+          app:app --host 0.0.0.0 --port 8000
+        env:
+        - name: DATABASE_URL
+          value: postgresql://shortener:shortener123@postgres:5432/shortener
+        image: python:3.11-slim
+        imagePullPolicy: IfNotPresent
+        name: api
+        ports:
+        - containerPort: 8000
+          protocol: TCP
+        resources:
+          limits:
+            cpu: 200m
+            memory: 256Mi
+          requests:
+            cpu: 50m
+            memory: 64Mi
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        volumeMounts:
+        - mountPath: /app
+          name: app-code
+        - mountPath: /app-deps
+          name: app-deps
+      dnsPolicy: ClusterFirst
+      initContainers:
+      - command:
+        - sh
+        - -c
+        - pip install --target=/app-deps fastapi uvicorn asyncpg pydantic
+        image: python:3.11-slim
+        imagePullPolicy: IfNotPresent
+        name: install-deps
+        resources: {}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        volumeMounts:
+        - mountPath: /app-deps
+          name: app-deps
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - configMap:
+          defaultMode: 420
+          name: app-code
+        name: app-code
+      - emptyDir: {}
+        name: app-deps
+status:
+  availableReplicas: 1
+  conditions:
+  - lastTransitionTime: "2026-01-10T00:22:55Z"
+    lastUpdateTime: "2026-01-10T00:38:18Z"
+    message: ReplicaSet "url-shortener-9d4dc4cd9" has successfully progressed.
+    reason: NewReplicaSetAvailable
+    status: "True"
+    type: Progressing
+  - lastTransitionTime: "2026-01-10T21:43:24Z"
+    lastUpdateTime: "2026-01-10T21:43:24Z"
+    message: Deployment has minimum availability.
+    reason: MinimumReplicasAvailable
+    status: "True"
+    type: Available
+  observedGeneration: 10
+  readyReplicas: 1
+  replicas: 1
+  updatedReplicas: 1

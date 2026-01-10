@@ -1,0 +1,75 @@
+apiVersion: v1
+items:
+- apiVersion: networking.k8s.io/v1
+  kind: Ingress
+  metadata:
+    annotations:
+      cert-manager.io/cluster-issuer: letsencrypt-prod
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"networking.k8s.io/v1","kind":"Ingress","metadata":{"annotations":{"cert-manager.io/cluster-issuer":"letsencrypt-prod","nginx.ingress.kubernetes.io/ssl-redirect":"true"},"name":"chatbot","namespace":"chatbot"},"spec":{"ingressClassName":"nginx","rules":[{"host":"chat.alphonzojonesjr.com","http":{"paths":[{"backend":{"service":{"name":"chatbot","port":{"number":8000}}},"path":"/","pathType":"Prefix"}]}}],"tls":[{"hosts":["chat.alphonzojonesjr.com"],"secretName":"chat-alphonzojonesjr-com-tls"}]}}
+    creationTimestamp: "2025-12-28T08:21:06Z"
+    generation: 6
+    name: chatbot
+    namespace: chatbot
+    resourceVersion: "5695605"
+    uid: 2f313f0b-c678-4a8b-954b-ca853cb82432
+  spec:
+    ingressClassName: nginx
+    rules:
+    - host: chat.alphonzojonesjr.com
+      http:
+        paths:
+        - backend:
+            service:
+              name: chatbot
+              port:
+                number: 8000
+          path: /
+          pathType: Prefix
+  status:
+    loadBalancer:
+      ingress:
+      - ip: 10.10.0.104
+- apiVersion: networking.k8s.io/v1
+  kind: Ingress
+  metadata:
+    annotations:
+      kubernetes.io/ingress.class: nginx
+      nginx.ingress.kubernetes.io/whitelist-source-range: 0.0.0.0/0,::/0
+    creationTimestamp: "2026-01-10T14:46:41Z"
+    generateName: cm-acme-http-solver-
+    generation: 1
+    labels:
+      acme.cert-manager.io/http-domain: "2716470069"
+      acme.cert-manager.io/http-token: "879562292"
+      acme.cert-manager.io/http01-solver: "true"
+    name: cm-acme-http-solver-nlg6h
+    namespace: chatbot
+    ownerReferences:
+    - apiVersion: acme.cert-manager.io/v1
+      blockOwnerDeletion: true
+      controller: true
+      kind: Challenge
+      name: chat-alphonzojonesjr-com-tls-1-3791517512-2998667551
+      uid: 538a73df-55c6-4463-ad81-b9bfcc94a726
+    resourceVersion: "5695626"
+    uid: bac9e911-9eb8-4e20-8019-3d9def5dd907
+  spec:
+    rules:
+    - host: www.chat.alphonzojonesjr.com
+      http:
+        paths:
+        - backend:
+            service:
+              name: cm-acme-http-solver-ccxzn
+              port:
+                number: 8089
+          path: /.well-known/acme-challenge/0Nekb5YA3fpeVKr9Y9bZKOtfPJFB-BjqVx4Zk-or6Vk
+          pathType: ImplementationSpecific
+  status:
+    loadBalancer:
+      ingress:
+      - ip: 10.10.0.104
+kind: List
+metadata:
+  resourceVersion: ""
