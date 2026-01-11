@@ -1,0 +1,151 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: dashboard
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: dashboard-html
+  namespace: dashboard
+data:
+  index.html: |
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Homelab Dashboard</title>
+        <style>
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            body { font-family: Arial, sans-serif; background: linear-gradient(135deg, #1a1a2e, #16213e); color: #fff; min-height: 100vh; padding: 20px; }
+            h1 { text-align: center; color: #4ade80; margin-bottom: 30px; font-size: 2em; }
+            .subtitle { text-align: center; color: #888; margin-bottom: 40px; }
+            .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; max-width: 1200px; margin: 0 auto; }
+            .card { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 20px; }
+            .card h2 { color: #4ade80; margin-bottom: 15px; font-size: 1.2em; }
+            .services a { display: block; color: #60a5fa; text-decoration: none; padding: 10px; margin: 5px 0; background: rgba(96,165,250,0.1); border-radius: 8px; transition: all 0.3s; }
+            .services a:hover { background: rgba(96,165,250,0.2); transform: translateX(5px); }
+            .footer { text-align: center; margin-top: 40px; color: #666; }
+            .stat-box { background: rgba(74,222,128,0.1); padding: 15px; border-radius: 8px; text-align: center; margin: 10px 0; }
+            .stat-value { font-size: 2em; color: #4ade80; font-weight: bold; }
+            .stat-label { color: #888; }
+        </style>
+    </head>
+    <body>
+        <h1>Homelab Dashboard</h1>
+        <p class="subtitle">Alphonzo Jones Jr. - Platform Engineering Lab</p>
+        <div class="grid">
+            <div class="card">
+                <h2>Applications</h2>
+                <div class="services">
+                    <a href="https://alphonzojonesjr.com" target="_blank">Portfolio</a>
+                    <a href="https://taskapp.alphonzojonesjr.com" target="_blank">TaskApp</a>
+                    <a href="https://chat.alphonzojonesjr.com" target="_blank">AI Chat Bot</a>
+                    <a href="https://short.alphonzojonesjr.com" target="_blank">URL Shortener</a>
+                    <a href="https://code.alphonzojonesjr.com" target="_blank">Code Server</a>
+                </div>
+            </div>
+            <div class="card">
+                <h2>Infrastructure</h2>
+                <div class="services">
+                    <a href="https://argocd.alphonzojonesjr.com" target="_blank">ArgoCD</a>
+                    <a href="https://grafana.alphonzojonesjr.com" target="_blank">Grafana</a>
+                    <a href="https://vault.alphonzojonesjr.com" target="_blank">Vault</a>
+                    <a href="https://status.alphonzojonesjr.com" target="_blank">Uptime Kuma</a>
+                    <a href="https://k8s.alphonzojonesjr.com" target="_blank">K8s Dashboard</a>
+                </div>
+            </div>
+            <div class="card">
+                <h2>Network</h2>
+                <div class="services">
+                    <a href="https://dns.alphonzojonesjr.com" target="_blank">Technitium DNS</a>
+                    <a href="https://pulse.alphonzojonesjr.com" target="_blank">Pulse</a>
+                    <a href="https://registry.alphonzojonesjr.com" target="_blank">Harbor Registry</a>
+                    <a href="https://lab.alphonzojonesjr.com" target="_blank">Lab</a>
+                    <a href="https://demo.alphonzojonesjr.com" target="_blank">Demo</a>
+                </div>
+            </div>
+            <div class="card">
+                <h2>Cluster Stats</h2>
+                <div class="stat-box">
+                    <div class="stat-value">3</div>
+                    <div class="stat-label">Nodes</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value">16</div>
+                    <div class="stat-label">Services</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value">80+</div>
+                    <div class="stat-label">Pods</div>
+                </div>
+            </div>
+        </div>
+        <div class="footer">Powered by Kubernetes on Proxmox</div>
+    </body>
+    </html>
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dashboard
+  namespace: dashboard
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: dashboard
+  template:
+    metadata:
+      labels:
+        app: dashboard
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:alpine
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - name: html
+          mountPath: /usr/share/nginx/html
+        resources:
+          requests:
+            memory: "32Mi"
+            cpu: "10m"
+          limits:
+            memory: "64Mi"
+            cpu: "50m"
+      volumes:
+      - name: html
+        configMap:
+          name: dashboard-html
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dashboard
+  namespace: dashboard
+spec:
+  selector:
+    app: dashboard
+  ports:
+  - port: 80
+    targetPort: 80
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: dashboard
+  namespace: dashboard
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: dash.alphonzojonesjr.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: dashboard
+            port:
+              number: 80

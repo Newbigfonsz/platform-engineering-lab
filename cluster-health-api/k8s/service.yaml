@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: cluster-health-api
+  namespace: cluster-api
+spec:
+  selector:
+    app: cluster-health-api
+  ports:
+  - port: 80
+    targetPort: 8080

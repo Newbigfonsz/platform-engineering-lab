@@ -1,0 +1,134 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cluster-health-api
+  namespace: cluster-api
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: cluster-health-api
+  template:
+    metadata:
+      labels:
+        app: cluster-health-api
+    spec:
+      serviceAccountName: cluster-health-api
+      containers:
+      - name: api
+        image: python:3.11-slim
+        command: ["sh", "-c"]
+        args:
+          - |
+            pip install flask kubernetes gunicorn flask-cors --quiet
+            cat > /app/main.py << 'PYEOF'
+            from flask import Flask, jsonify
+            from flask_cors import CORS
+            from kubernetes import client, config
+            import os
+            from datetime import datetime
+
+            app = Flask(__name__)
+            CORS(app)
+
+            try:
+                config.load_incluster_config()
+            except:
+                config.load_kube_config()
+
+            v1 = client.CoreV1Api()
+            apps_v1 = client.AppsV1Api()
+
+            @app.route('/health')
+            def health():
+                return jsonify({"status": "healthy", "timestamp": datetime.utcnow().isoformat()})
+
+            @app.route('/api/cluster')
+            def cluster_info():
+                try:
+                    nodes = v1.list_node()
+                    pods = v1.list_pod_for_all_namespaces()
+                    namespaces = v1.list_namespace()
+                    running = sum(1 for p in pods.items if p.status.phase == "Running")
+                    pending = sum(1 for p in pods.items if p.status.phase == "Pending")
+                    failed = sum(1 for p in pods.items if p.status.phase == "Failed")
+                    ready_nodes = sum(1 for node in nodes.items for c in node.status.conditions if c.type == "Ready" and c.status == "True")
+                    return jsonify({
+                        "cluster": {
+                            "nodes": {"total": len(nodes.items), "ready": ready_nodes},
+                            "pods": {"total": len(pods.items), "running": running, "pending": pending, "failed": failed},
+                            "namespaces": len(namespaces.items)
+                        },
+                        "timestamp": datetime.utcnow().isoformat()
+                    })
+                except Exception as e:
+                    return jsonify({"error": str(e)}), 500
+
+            @app.route('/api/nodes')
+            def nodes_info():
+                try:
+                    nodes = v1.list_node()
+                    node_list = []
+                    for node in nodes.items:
+                        status = "Unknown"
+                        for c in node.status.conditions:
+                            if c.type == "Ready":
+                                status = "Ready" if c.status == "True" else "NotReady"
+                        node_list.append({
+                            "name": node.metadata.name,
+                            "status": status,
+                            "cpu": node.status.capacity.get("cpu", "0"),
+                            "memory": node.status.capacity.get("memory", "0")
+                        })
+                    return jsonify({"nodes": node_list})
+                except Exception as e:
+                    return jsonify({"error": str(e)}), 500
+
+            @app.route('/api/namespaces')
+            def namespaces_info():
+                try:
+                    namespaces = v1.list_namespace()
+                    pods = v1.list_pod_for_all_namespaces()
+                    pod_counts = {}
+                    for pod in pods.items:
+                        ns = pod.metadata.namespace
+                        pod_counts[ns] = pod_counts.get(ns, 0) + 1
+                    ns_list = [{"name": ns.metadata.name, "pods": pod_counts.get(ns.metadata.name, 0)} for ns in namespaces.items]
+                    return jsonify({"namespaces": ns_list})
+                except Exception as e:
+                    return jsonify({"error": str(e)}), 500
+
+            @app.route('/api/deployments')
+            def deployments_info():
+                try:
+                    deps = apps_v1.list_deployment_for_all_namespaces()
+                    dep_list = [{"name": d.metadata.name, "namespace": d.metadata.namespace, "ready": d.status.ready_replicas or 0, "replicas": d.spec.replicas or 0} for d in deps.items]
+                    return jsonify({"deployments": dep_list})
+                except Exception as e:
+                    return jsonify({"error": str(e)}), 500
+
+            if __name__ == '__main__':
+                app.run(host='0.0.0.0', port=8080)
+            PYEOF
+            gunicorn --bind 0.0.0.0:8080 --workers 2 --chdir /app main:app
+        ports:
+        - containerPort: 8080
+        resources:
+          requests:
+            cpu: 50m
+            memory: 128Mi
+          limits:
+            cpu: 200m
+            memory: 256Mi
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 5

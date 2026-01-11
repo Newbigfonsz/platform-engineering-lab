@@ -1,0 +1,67 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: dashboard-html
+  namespace: dashboard
+  annotations:
+    force-update: "true"
+data:
+  index.html: |
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>K8s Platform Dashboard</title>
+        <style>
+            body { font-family: sans-serif; background: #1a1a1a; color: white; padding: 20px; }
+            .card { background: #2d2d2d; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+            th, td { text-align: left; padding: 12px; border-bottom: 1px solid #444; }
+            th { background: #3d3d3d; }
+            .status-running { color: #4caf50; font-weight: bold; }
+            .status-pending { color: #ff9800; }
+        </style>
+    </head>
+    <body>
+        <div class="card">
+            <h1>Cluster Pod Monitor</h1>
+            <div id="loading">Fetching data from Sidecar API...</div>
+            <table id="podTable" style="display:none;">
+                <thead>
+                    <tr>
+                        <th>Namespace</th>
+                        <th>Pod Name</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="podBody"></tbody>
+            </table>
+        </div>
+
+        <script>
+            async function fetchPods() {
+                try {
+                    // In a real Ingress setup, this would be a relative path or proxied URL
+                    const response = await fetch('/api/pods'); 
+                    const data = await response.json();
+                    const body = document.getElementById('podBody');
+                    document.getElementById('loading').style.display = 'none';
+                    document.getElementById('podTable').style.display = 'table';
+                    
+                    body.innerHTML = '';
+                    data.forEach(pod => {
+                        const row = `<tr>
+                            <td>${pod.namespace}</td>
+                            <td>${pod.name}</td>
+                            <td class="status-${pod.status.toLowerCase()}">${pod.status}</td>
+                        </tr>`;
+                        body.innerHTML += row;
+                    });
+                } catch (err) {
+                    document.getElementById('loading').innerHTML = "Error: Could not connect to Resource API";
+                }
+            }
+            fetchPods();
+            setInterval(fetchPods, 10000); // Auto-refresh every 10s
+        </script>
+    </body>
+    </html>

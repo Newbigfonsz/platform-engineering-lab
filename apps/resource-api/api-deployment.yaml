@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: resource-api
+  namespace: dashboard
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: resource-api
+  template:
+    metadata:
+      labels:
+        app: resource-api
+    spec:
+      serviceAccountName: resource-api-sa
+      containers:
+      # Container 1: Our new Python API
+      - name: python-sidecar
+        image: python:3.9-slim
+        command: ["/bin/sh", "-c"]
+        args:
+          - pip install flask kubernetes && python /app/app.py
+        ports:
+        - containerPort: 5000
+        volumeMounts:
+        - name: script-vol
+          mountPath: /app
+      # Container 2: Your original logger (optional, but good for debugging)
+      - name: logger
+        image: bitnami/kubectl:latest
+        command: ["/bin/sh", "-c"]
+        args: ["while true; do echo 'Sidecar is running...'; sleep 60; done"]
+      volumes:
+      - name: script-vol
+        configMap:
+          name: api-python-script

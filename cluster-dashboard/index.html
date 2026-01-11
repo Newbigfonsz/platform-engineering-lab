@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cluster Health Dashboard</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            color: #fff;
+            padding: 20px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            background: linear-gradient(90deg, #00d4ff, #7b2cbf);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .header p { color: #aaa; }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .stat-card {
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 40px rgba(0,212,255,0.2);
+        }
+        .stat-card i {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+            background: linear-gradient(90deg, #00d4ff, #7b2cbf);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .stat-card .value {
+            font-size: 3rem;
+            font-weight: bold;
+            color: #00d4ff;
+        }
+        .stat-card .label {
+            color: #aaa;
+            margin-top: 5px;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .section {
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            backdrop-filter: blur(10px);
+        }
+        .section h2 {
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .section h2 i { color: #00d4ff; }
+        .node-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 15px;
+        }
+        .node-card {
+            background: rgba(0,0,0,0.3);
+            border-radius: 10px;
+            padding: 20px;
+            border-left: 4px solid #00d4ff;
+        }
+        .node-card h3 { color: #00d4ff; margin-bottom: 10px; }
+        .node-card .detail { color: #aaa; font-size: 0.9rem; margin: 5px 0; }
+        .node-card .detail span { color: #fff; }
+        .deployments-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .deployment-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 15px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+        .deployment-item .name {
+            font-weight: 500;
+        }
+        .deployment-item .namespace {
+            color: #aaa;
+            font-size: 0.85rem;
+        }
+        .deployment-item .status {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+        }
+        .status.healthy { background: #00c853; color: #fff; }
+        .status.warning { background: #ff9800; color: #fff; }
+        .status.error { background: #f44336; color: #fff; }
+        .timestamp {
+            text-align: center;
+            color: #666;
+            margin-top: 20px;
+            font-size: 0.85rem;
+        }
+        .refresh-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: linear-gradient(90deg, #00d4ff, #7b2cbf);
+            border: none;
+            color: #fff;
+            padding: 15px 25px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 5px 20px rgba(0,212,255,0.4);
+            transition: transform 0.3s;
+        }
+        .refresh-btn:hover { transform: scale(1.05); }
+        .loading { opacity: 0.5; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .spinning { animation: spin 1s linear infinite; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1><i class="fas fa-heartbeat"></i> Cluster Health Dashboard</h1>
+        <p>Real-time Kubernetes cluster monitoring powered by Python API</p>
+    </div>
+
+    <div class="stats-grid" id="stats">
+        <div class="stat-card">
+            <i class="fas fa-server"></i>
+            <div class="value" id="nodes-ready">-</div>
+            <div class="label">Nodes Ready</div>
+        </div>
+        <div class="stat-card">
+            <i class="fas fa-cubes"></i>
+            <div class="value" id="pods-running">-</div>
+            <div class="label">Pods Running</div>
+        </div>
+        <div class="stat-card">
+            <i class="fas fa-folder"></i>
+            <div class="value" id="namespaces">-</div>
+            <div class="label">Namespaces</div>
+        </div>
+        <div class="stat-card">
+            <i class="fas fa-rocket"></i>
+            <div class="value" id="deployments">-</div>
+            <div class="label">Deployments</div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2><i class="fas fa-server"></i> Nodes</h2>
+        <div class="node-grid" id="nodes-grid"></div>
+    </div>
+
+    <div class="section">
+        <h2><i class="fas fa-rocket"></i> Deployments</h2>
+        <div class="deployments-list" id="deployments-list"></div>
+    </div>
+
+    <div class="timestamp" id="timestamp"></div>
+
+    <button class="refresh-btn" onclick="loadData()">
+        <i class="fas fa-sync-alt" id="refresh-icon"></i> Refresh
+    </button>
+
+    <script>
+        const API_BASE = 'https://api.alphonzojonesjr.com';
+
+        async function loadData() {
+            const icon = document.getElementById('refresh-icon');
+            icon.classList.add('spinning');
+
+            try {
+                // Load cluster data
+                const clusterRes = await fetch(`${API_BASE}/api/cluster`);
+                const cluster = await clusterRes.json();
+                
+                document.getElementById('nodes-ready').textContent = `${cluster.nodes.ready}/${cluster.nodes.total}`;
+                document.getElementById('pods-running').textContent = cluster.pods.running;
+
+                // Load nodes
+                const nodesRes = await fetch(`${API_BASE}/api/nodes`);
+                const nodes = await nodesRes.json();
+                
+                const nodesGrid = document.getElementById('nodes-grid');
+                nodesGrid.innerHTML = nodes.nodes.map(node => `
+                    <div class="node-card">
+                        <h3><i class="fas fa-server"></i> ${node.name}</h3>
+                        <div class="detail">CPU: <span>${node.cpu} cores</span></div>
+                        <div class="detail">Memory: <span>${(parseInt(node.memory) / 1024 / 1024).toFixed(1)} GB</span></div>
+                    </div>
+                `).join('');
+
+                // Load namespaces
+                const nsRes = await fetch(`${API_BASE}/api/namespaces`);
+                const ns = await nsRes.json();
+                document.getElementById('namespaces').textContent = ns.namespaces.length;
+
+                // Load deployments
+                const depsRes = await fetch(`${API_BASE}/api/deployments`);
+                const deps = await depsRes.json();
+                
+                document.getElementById('deployments').textContent = deps.deployments.length;
+                
+                const depsList = document.getElementById('deployments-list');
+                depsList.innerHTML = deps.deployments
+                    .filter(d => d.ready > 0 || d.namespace === 'cluster-api')
+                    .slice(0, 30)
+                    .map(dep => `
+                        <div class="deployment-item">
+                            <div>
+                                <div class="name">${dep.name}</div>
+                                <div class="namespace">${dep.namespace}</div>
+                            </div>
+                            <div class="status ${dep.ready > 0 ? 'healthy' : 'error'}">
+                                ${dep.ready > 0 ? 'Healthy' : 'Down'}
+                            </div>
+                        </div>
+                    `).join('');
+
+                document.getElementById('timestamp').textContent = 
+                    `Last updated: ${new Date().toLocaleString()}`;
+
+            } catch (error) {
+                console.error('Error loading data:', error);
+            }
+
+            icon.classList.remove('spinning');
+        }
+
+        // Load data on page load
+        loadData();
+
+        // Auto-refresh every 30 seconds
+        setInterval(loadData, 30000);
+    </script>
+</body>
+</html>
