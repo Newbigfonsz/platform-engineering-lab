@@ -127,6 +127,13 @@ spec:
         envFrom:
         - secretRef:
             name: postgres-secret
+        resources:
+          requests:
+            cpu: 50m
+            memory: 128Mi
+          limits:
+            cpu: 200m
+            memory: 256Mi
         volumeMounts:
         - name: data
           mountPath: /var/lib/postgresql/data
@@ -165,6 +172,13 @@ spec:
       - name: install-deps
         image: python:3.11-slim
         command: ['sh', '-c', 'pip install --target=/app-deps fastapi uvicorn asyncpg pydantic']
+        resources:
+          requests:
+            cpu: 50m
+            memory: 64Mi
+          limits:
+            cpu: 200m
+            memory: 256Mi
         volumeMounts:
         - name: app-deps
           mountPath: /app-deps
