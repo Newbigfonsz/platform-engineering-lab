@@ -1,0 +1,256 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: portfolio
+  namespace: portfolio
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: portfolio
+  template:
+    metadata:
+      labels:
+        app: portfolio
+    spec:
+      containers:
+      - name: portfolio
+        image: nginx:alpine
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - name: html
+          mountPath: /usr/share/nginx/html
+      volumes:
+      - name: html
+        configMap:
+          name: portfolio-html
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: portfolio-html
+  namespace: portfolio
+data:
+  index.html: |
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Alphonzo Jones Jr. - Platform Engineer</title>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+        <style>
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            body {
+                font-family: 'Inter', sans-serif;
+                background: linear-gradient(135deg, #0f0f23 0%, #1a1a3e 50%, #0f0f23 100%);
+                color: #fff;
+                min-height: 100vh;
+            }
+            .container { max-width: 1200px; margin: 0 auto; padding: 40px 20px; }
+            header { text-align: center; padding: 60px 0; }
+            h1 { font-size: 3em; margin-bottom: 10px; background: linear-gradient(90deg, #4ade80, #60a5fa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+            .subtitle { font-size: 1.4em; color: #a0a0a0; margin-bottom: 20px; }
+            .tagline { font-size: 1.1em; color: #4ade80; }
+            .section { margin: 60px 0; }
+            .section-title { font-size: 1.8em; margin-bottom: 30px; color: #4ade80; text-align: center; }
+            .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
+            .card {
+                background: rgba(255,255,255,0.05);
+                border: 1px solid rgba(255,255,255,0.1);
+                border-radius: 16px;
+                padding: 25px;
+                transition: transform 0.3s, border-color 0.3s;
+            }
+            .card:hover { transform: translateY(-5px); border-color: #4ade80; }
+            .card h3 { color: #60a5fa; margin-bottom: 10px; }
+            .card p { color: #a0a0a0; line-height: 1.6; }
+            .card a { color: #4ade80; text-decoration: none; }
+            .card a:hover { text-decoration: underline; }
+            .skills { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin: 30px 0; }
+            .skill {
+                background: rgba(74, 222, 128, 0.15);
+                border: 1px solid #4ade80;
+                padding: 8px 20px;
+                border-radius: 25px;
+                font-size: 0.9em;
+            }
+            .stats { display: flex; justify-content: center; gap: 40px; margin: 40px 0; flex-wrap: wrap; }
+            .stat { text-align: center; }
+            .stat-value { font-size: 2.5em; font-weight: 700; color: #4ade80; }
+            .stat-label { color: #a0a0a0; }
+            .cta {
+                display: inline-block;
+                background: linear-gradient(90deg, #4ade80, #22c55e);
+                color: #000;
+                padding: 15px 40px;
+                border-radius: 30px;
+                text-decoration: none;
+                font-weight: 600;
+                margin-top: 20px;
+                transition: transform 0.3s;
+            }
+            .cta:hover { transform: scale(1.05); }
+            .links { text-align: center; margin-top: 40px; }
+            .links a { color: #60a5fa; margin: 0 15px; text-decoration: none; }
+            .links a:hover { text-decoration: underline; }
+            footer { text-align: center; padding: 40px; color: #666; }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <header>
+                <h1>Alphonzo Jones Jr.</h1>
+                <p class="subtitle">Platform Engineer / DevOps Engineer</p>
+                <p class="tagline">Building Production-Grade Cloud Infrastructure</p>
+            </header>
+
+            <div class="stats">
+                <div class="stat">
+                    <div class="stat-value">9</div>
+                    <div class="stat-label">Live Services</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value">70+</div>
+                    <div class="stat-label">Running Pods</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value">99.9%</div>
+                    <div class="stat-label">Uptime</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value">449K+</div>
+                    <div class="stat-label">DNS Blocked</div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2 class="section-title">Skills</h2>
+                <div class="skills">
+                    <span class="skill">Kubernetes</span>
+                    <span class="skill">Terraform</span>
+                    <span class="skill">ArgoCD</span>
+                    <span class="skill">Prometheus</span>
+                    <span class="skill">Grafana</span>
+                    <span class="skill">Docker</span>
+                    <span class="skill">AWS</span>
+                    <span class="skill">Linux</span>
+                    <span class="skill">Python</span>
+                    <span class="skill">Bash</span>
+                    <span class="skill">Git</span>
+                    <span class="skill">CI/CD</span>
+                    <span class="skill">HashiCorp Vault</span>
+                    <span class="skill">Cloudflare</span>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2 class="section-title">Platform Engineering Lab</h2>
+                <div class="cards">
+                    <div class="card">
+                        <h3>&#x1F4CA; Status Page</h3>
+                        <p>Real-time monitoring with Uptime Kuma. 8 services monitored 24/7.</p>
+                        <a href="https://status.alphonzojonesjr.com/status/status">View Status &#x2192;</a>
+                    </div>
+                    <div class="card">
+                        <h3>&#x1F4DD; TaskApp</h3>
+                        <p>Full-stack React + Node.js + PostgreSQL application running on Kubernetes.</p>
+                        <a href="https://taskapp.alphonzojonesjr.com">View App &#x2192;</a>
+                    </div>
+                    <div class="card">
+                        <h3>&#x1F504; ArgoCD</h3>
+                        <p>GitOps continuous delivery. 9 applications auto-synced from GitHub.</p>
+                        <a href="https://argocd.alphonzojonesjr.com">View Dashboard &#x2192;</a>
+                    </div>
+                    <div class="card">
+                        <h3>&#x1F4C8; Grafana</h3>
+                        <p>Monitoring with Prometheus, Loki logging, and custom dashboards.</p>
+                        <a href="https://grafana.alphonzojonesjr.com">View Metrics &#x2192;</a>
+                    </div>
+                    <div class="card">
+                        <h3>&#x1F512; Vault</h3>
+                        <p>HashiCorp Vault for secrets management with Kubernetes auth.</p>
+                        <a href="https://vault.alphonzojonesjr.com">View Vault &#x2192;</a>
+                    </div>
+                    <div class="card">
+                        <h3>&#x2638; Kubernetes Dashboard</h3>
+                        <p>Visual cluster management for the 3-node production cluster.</p>
+                        <a href="https://k8s.alphonzojonesjr.com">View Cluster &#x2192;</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section" style="text-align: center;">
+                <h2 class="section-title">Architecture Highlights</h2>
+                <div class="cards">
+                    <div class="card">
+                        <h3>Infrastructure as Code</h3>
+                        <p>Terraform manages Proxmox VMs. Entire infrastructure is version controlled and reproducible.</p>
+                    </div>
+                    <div class="card">
+                        <h3>GitOps Workflow</h3>
+                        <p>ArgoCD automatically syncs Kubernetes state from GitHub. No manual deployments.</p>
+                    </div>
+                    <div class="card">
+                        <h3>Security First</h3>
+                        <p>Kyverno policies, Network Policies, Pod Security Standards, and Vault for secrets.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="links">
+                <a href="https://github.com/Newbigfonsz/platform-engineering-lab">&#x1F4BB; GitHub</a>
+                <a href="https://lab.alphonzojonesjr.com">&#x1F680; Lab</a>
+                <a href="https://status.alphonzojonesjr.com/status/status">&#x1F4CA; Status</a>
+            </div>
+
+            <footer>
+                <p>&copy; 2025 Alphonzo Jones Jr. | Platform Engineering Lab</p>
+            </footer>
+        </div>
+    </body>
+    </html>
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: portfolio
+  namespace: portfolio
+spec:
+  selector:
+    app: portfolio
+  ports:
+  - port: 80
+    targetPort: 80
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: portfolio-ingress
+  namespace: portfolio
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: alphonzojonesjr.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: portfolio
+            port:
+              number: 80
+  - host: www.alphonzojonesjr.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: portfolio
+            port:
+              number: 80
