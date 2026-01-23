@@ -943,7 +943,7 @@ data:
                     <div class="node-card">
                         <div class="node-name">k8s-cp01</div>
                         <div class="node-specs">
-                            <span>2 cores</span>
+                            <span>4 cores</span>
                             <span class="node-divider">•</span>
                             <span>15.6 GB</span>
                         </div>
@@ -952,7 +952,7 @@ data:
                     <div class="node-card">
                         <div class="node-name">k8s-worker01</div>
                         <div class="node-specs">
-                            <span>2 cores</span>
+                            <span>4 cores</span>
                             <span class="node-divider">•</span>
                             <span>15.6 GB</span>
                         </div>
@@ -961,7 +961,7 @@ data:
                     <div class="node-card">
                         <div class="node-name">k8s-worker02</div>
                         <div class="node-specs">
-                            <span>2 cores</span>
+                            <span>4 cores</span>
                             <span class="node-divider">•</span>
                             <span>15.6 GB</span>
                         </div>
