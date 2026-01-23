@@ -1080,23 +1080,21 @@ data:
             <div class="credentials-grid">
                 <div class="credential-card">
                     <div class="credential-type">Certification</div>
+                    <div class="credential-title">AWS Cloud Practitioner</div>
+                    <div class="credential-org">Amazon Web Services</div>
+                </div>
+                <div class="credential-card">
+                    <div class="credential-type">Certification</div>
                     <div class="credential-title">AWS Solutions Architect - Associate</div>
                     <div class="credential-org">Amazon Web Services</div>
                 </div>
                 <div class="credential-card">
-                <div class="credential-card">
-                    <div class="credential-type">Certification</div>
-                    <div class="credential-title">AWS Cloud Practitioner</div>
-                    <div class="credential-org">Amazon Web Services</div>
-                </div>
                     <div class="credential-type">Education</div>
                     <div class="credential-title">Associate of Applied Science</div>
                     <div class="credential-org">Cloud Computing Specialization</div>
                     <div class="credential-location">Northern Virginia Community College · Sterling, VA</div>
                 </div>
             </div>
-    
-            <!-- Footer -->
             <footer class="footer">
                 <p>Built with Kubernetes | <a href="https://status.alphonzojonesjr.com">System Status</a> | © 2026 Alphonzo Jones Jr.</p>
             </footer>
