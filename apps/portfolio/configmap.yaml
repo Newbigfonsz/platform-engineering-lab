@@ -681,8 +681,8 @@ data:
                     <div class="stat-label">Uptime</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-value">3</div>
-                    <div class="stat-label">Security Layers</div>
+                    <div class="stat-value">6</div>
+                    <div class="stat-label">Cluster Nodes</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-value">449K+</div>
@@ -906,7 +906,7 @@ data:
                             <span class="node-divider">•</span>
                             <span>15.6 GB</span>
                         </div>
-                        <div class="node-role">Worker</div>
+                        <div class="node-role">Worker • Bare Metal</div>
                     </div>
                     <div class="node-card">
                         <div class="node-name">k8s-worker04</div>
@@ -915,7 +915,7 @@ data:
                             <span class="node-divider">•</span>
                             <span>15.6 GB</span>
                         </div>
-                        <div class="node-role">Worker</div>
+                        <div class="node-role">Worker • Bare Metal</div>
                     </div>
                     <div class="node-card">
                         <div class="node-name">k8s-worker05</div>
@@ -924,7 +924,7 @@ data:
                             <span class="node-divider">•</span>
                             <span>15.4 GB</span>
                         </div>
-                        <div class="node-role">Worker</div>
+                        <div class="node-role">Worker • Bare Metal</div>
                     </div>
                 </div>
                 <a href="dashboard.html" class="dashboard-link">
