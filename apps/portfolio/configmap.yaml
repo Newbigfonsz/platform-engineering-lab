@@ -373,6 +373,8 @@ data:
     
             /* Skills Section */
             .skills-container {
+                display: flex;
+                margin-bottom: 3rem;
                 clear: both;
                 width: 100%;
                 display: flex;
@@ -410,6 +412,8 @@ data:
     
             /* Cluster Infrastructure */
             .cluster-summary {
+                display: block;
+                margin-bottom: 3rem;
                 clear: both;
                 width: 100%;
                 animation: fadeIn 0.8s ease-out 0.5s both;
