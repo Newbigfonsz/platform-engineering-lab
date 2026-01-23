@@ -673,7 +673,7 @@ data:
                     <div class="stat-label">Live Services</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-value">139</div>
+                    <div class="stat-value">150+</div>
                     <div class="stat-label">Running Pods</div>
                 </div>
                 <div class="stat-card">
@@ -1476,7 +1476,7 @@ data:
                     <div class="stat-label">Nodes Ready</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-value">139</div>
+                    <div class="stat-value">150+</div>
                     <div class="stat-label">Pods Running</div>
                 </div>
                 <div class="stat-card">
