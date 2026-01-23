@@ -867,7 +867,7 @@ data:
                         <span class="service-status"><span class="dot"></span>Live</span>
                     </div>
                     <p class="service-description">Official Kubernetes web UI for cluster management and workload monitoring.</p>
-                    <a href="https://kubernetes.alphonzojonesjr.com" class="service-link">
+                    <a href="https://k8s.alphonzojonesjr.com" class="service-link">
                         Open K8s Dashboard
                         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
                     </a>
@@ -927,7 +927,7 @@ data:
                         <span class="service-status"><span class="dot"></span>Live</span>
                     </div>
                     <p class="service-description">Official Kubernetes web UI for cluster management and workload monitoring.</p>
-                    <a href="https://kubernetes.alphonzojonesjr.com" class="service-link">
+                    <a href="https://k8s.alphonzojonesjr.com" class="service-link">
                         Open K8s Dashboard
                         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
                     </a>
