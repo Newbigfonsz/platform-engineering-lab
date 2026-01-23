@@ -399,7 +399,7 @@ data:
             /* Certifications & Education */
             .credentials-grid {
                 display: grid;
-                grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+                grid-template-columns: repeat(3, 1fr);
                 gap: 1.5rem;
                 animation: fadeIn 0.8s ease-out 0.8s both;
             }
