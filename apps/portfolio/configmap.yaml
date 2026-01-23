@@ -1684,7 +1684,7 @@ data:
                             <div class="spec-value">15.6 GB</div>
                         </div>
                     </div>
-                    <div class="node-role">Worker Node</div>
+                    <div class="node-role">Worker Node • Bare Metal</div>
                 </div>
     
                 <div class="node-card">
@@ -1702,7 +1702,7 @@ data:
                             <div class="spec-value">15.6 GB</div>
                         </div>
                     </div>
-                    <div class="node-role">Worker Node</div>
+                    <div class="node-role">Worker Node • Bare Metal</div>
                 </div>
     
                 <div class="node-card">
@@ -1720,7 +1720,7 @@ data:
                             <div class="spec-value">15.4 GB</div>
                         </div>
                     </div>
-                    <div class="node-role">Worker Node</div>
+                    <div class="node-role">Worker Node • Bare Metal</div>
                 </div>
             </div>
     
