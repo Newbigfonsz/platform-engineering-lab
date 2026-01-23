@@ -848,6 +848,66 @@ data:
                         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
                     </a>
                 </div>
+
+                <div class="service-card">
+                    <div class="service-header">
+                        <span class="service-name">n8n Automation</span>
+                        <span class="service-status"><span class="dot"></span>Live</span>
+                    </div>
+                    <p class="service-description">Workflow automation platform for connecting services and automating tasks.</p>
+                    <a href="https://n8n.alphonzojonesjr.com" class="service-link">
+                        Open n8n
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                    </a>
+                </div>
+
+                <div class="service-card">
+                    <div class="service-header">
+                        <span class="service-name">Kubernetes Dashboard</span>
+                        <span class="service-status"><span class="dot"></span>Live</span>
+                    </div>
+                    <p class="service-description">Official Kubernetes web UI for cluster management and workload monitoring.</p>
+                    <a href="https://kubernetes.alphonzojonesjr.com" class="service-link">
+                        Open K8s Dashboard
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                    </a>
+                </div>
+
+                <div class="service-card">
+                    <div class="service-header">
+                        <span class="service-name">Technitium DNS</span>
+                        <span class="service-status"><span class="dot"></span>Live</span>
+                    </div>
+                    <p class="service-description">Self-hosted DNS server with ad blocking, privacy features, and query logging.</p>
+                    <a href="https://dns.alphonzojonesjr.com" class="service-link">
+                        Open DNS
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                    </a>
+                </div>
+
+                <div class="service-card">
+                    <div class="service-header">
+                        <span class="service-name">Demo Environment</span>
+                        <span class="service-status"><span class="dot"></span>Live</span>
+                    </div>
+                    <p class="service-description">Sandbox environment for testing deployments and demonstrating capabilities.</p>
+                    <a href="https://demo.alphonzojonesjr.com" class="service-link">
+                        Open Demo
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                    </a>
+                </div>
+
+                <div class="service-card">
+                    <div class="service-header">
+                        <span class="service-name">Lab Environment</span>
+                        <span class="service-status"><span class="dot"></span>Live</span>
+                    </div>
+                    <p class="service-description">Experimental playground for testing new technologies and configurations.</p>
+                    <a href="https://lab.alphonzojonesjr.com" class="service-link">
+                        Open Lab
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                    </a>
+                </div>
             </div>
     
             <!-- Cluster Infrastructure -->
