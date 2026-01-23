@@ -1,0 +1,405 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: portfolio-html
+  namespace: portfolio
+data:
+  index.html: |
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>AJ | Platform Engineer</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+        <style>
+            :root {
+                --bg-primary: #0a0a0f;
+                --bg-secondary: #12121a;
+                --bg-card: #16161f;
+                --bg-card-hover: #1a1a25;
+                --border-color: #2a2a3a;
+                --text-primary: #f0f0f5;
+                --text-secondary: #8888a0;
+                --text-muted: #5a5a70;
+                --accent-green: #00ff88;
+                --accent-green-dim: #00cc6a;
+                --accent-blue: #00d4ff;
+                --accent-purple: #a855f7;
+                --accent-yellow: #fbbf24;
+                --accent-red: #ff4444;
+                --status-live: #00ff88;
+                --status-degraded: #fbbf24;
+                --status-down: #ff4444;
+            }
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            body { font-family: 'Space Grotesk', sans-serif; background: var(--bg-primary); color: var(--text-primary); min-height: 100vh; line-height: 1.6; }
+            .noise-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; opacity: 0.03; z-index: 1000; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E"); }
+            .grid-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-image: linear-gradient(rgba(0, 255, 136, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 255, 136, 0.03) 1px, transparent 1px); background-size: 50px 50px; pointer-events: none; z-index: -1; }
+            .container { max-width: 1400px; margin: 0 auto; padding: 2rem; position: relative; z-index: 1; }
+            .header { text-align: center; padding: 4rem 0 3rem; animation: fadeInDown 0.8s ease-out; }
+            @keyframes fadeInDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+            .k8s-logo-container { position: relative; width: 80px; height: 80px; margin: 0 auto 1rem; }
+            .k8s-logo-ring { position: absolute; width: 100%; height: 100%; border: 2px solid var(--accent-green); border-radius: 50%; animation: pulse-ring 2s ease-out infinite; }
+            .k8s-logo-ring:nth-child(2) { animation-delay: 0.5s; }
+            .k8s-logo-ring:nth-child(3) { animation-delay: 1s; }
+            @keyframes pulse-ring { 0% { transform: scale(0.8); opacity: 1; } 100% { transform: scale(1.3); opacity: 0; } }
+            .k8s-logo-icon { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 2rem; }
+            .header h1 { font-size: 3.5rem; font-weight: 700; margin-bottom: 0.5rem; background: linear-gradient(135deg, var(--text-primary) 0%, var(--accent-green) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+            .header h2 { font-size: 1.3rem; font-weight: 500; color: var(--text-secondary); margin-bottom: 0.5rem; }
+            .header p { font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; color: var(--text-muted); }
+            .status-banner { display: flex; align-items: center; justify-content: center; gap: 0.75rem; padding: 1rem 2rem; background: linear-gradient(135deg, rgba(0, 255, 136, 0.1) 0%, rgba(0, 255, 136, 0.05) 100%); border: 1px solid rgba(0, 255, 136, 0.3); border-radius: 50px; margin: 2rem auto; max-width: fit-content; animation: pulseGreen 2s ease-in-out infinite; }
+            @keyframes pulseGreen { 0%, 100% { box-shadow: 0 0 20px rgba(0, 255, 136, 0.2); } 50% { box-shadow: 0 0 30px rgba(0, 255, 136, 0.4); } }
+            .status-dot { width: 10px; height: 10px; background: var(--accent-green); border-radius: 50%; animation: blink 1.5s ease-in-out infinite; }
+            @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+            .status-banner span { font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; color: var(--accent-green); font-weight: 500; }
+            .status-banner a { color: var(--accent-green); text-decoration: underline; text-underline-offset: 3px; }
+            .status-banner a:hover { color: var(--text-primary); }
+            .stats-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 1.5rem; margin: 3rem 0; animation: fadeIn 0.8s ease-out 0.2s both; }
+            @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+            .stat-card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 1.5rem; text-align: center; transition: all 0.3s ease; }
+            .stat-card:hover { background: var(--bg-card-hover); border-color: var(--accent-green); transform: translateY(-2px); }
+            .stat-value { font-family: 'JetBrains Mono', monospace; font-size: 2.5rem; font-weight: 700; color: var(--accent-green); line-height: 1; margin-bottom: 0.5rem; }
+            .stat-label { font-size: 0.85rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.1em; }
+            .section-title { font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; color: var(--accent-green); letter-spacing: 0.2em; text-transform: uppercase; margin: 4rem 0 2rem; display: flex; align-items: center; gap: 1rem; }
+            .section-title::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, var(--border-color), transparent); }
+            .services-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.25rem; animation: fadeIn 0.8s ease-out 0.4s both; }
+            .service-card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 1.5rem; transition: all 0.3s ease; position: relative; overflow: hidden; }
+            .service-card::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 3px; background: var(--status-live); opacity: 0; transition: opacity 0.3s ease; }
+            .service-card:hover { background: var(--bg-card-hover); border-color: var(--accent-green); transform: translateY(-2px); }
+            .service-card:hover::before { opacity: 1; }
+            .service-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem; }
+            .service-name { font-weight: 600; font-size: 1.1rem; }
+            .service-status { display: flex; align-items: center; gap: 0.4rem; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; padding: 0.25rem 0.6rem; border-radius: 20px; background: rgba(0, 255, 136, 0.1); color: var(--status-live); }
+            .service-status .dot { width: 6px; height: 6px; background: currentColor; border-radius: 50%; }
+            .service-description { font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 1rem; line-height: 1.5; }
+            .service-link { font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: var(--accent-blue); text-decoration: none; display: inline-flex; align-items: center; gap: 0.4rem; transition: color 0.2s ease; }
+            .service-link:hover { color: var(--text-primary); }
+            .service-link svg { width: 14px; height: 14px; }
+            .skills-container { display: flex; flex-wrap: wrap; gap: 0.75rem; animation: fadeIn 0.8s ease-out 0.6s both; }
+            .skill-tag { font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; padding: 0.5rem 1rem; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-secondary); transition: all 0.2s ease; }
+            .skill-tag:hover { border-color: var(--accent-green); color: var(--accent-green); transform: translateY(-2px); }
+            .credentials-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem; animation: fadeIn 0.8s ease-out 0.8s both; }
+            .credential-card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 1.5rem; transition: all 0.3s ease; }
+            .credential-card:hover { border-color: var(--accent-purple); transform: translateY(-2px); }
+            .credential-type { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; color: var(--accent-purple); text-transform: uppercase; letter-spacing: 0.15em; margin-bottom: 0.5rem; }
+            .credential-title { font-size: 1.1rem; font-weight: 600; margin-bottom: 0.25rem; }
+            .credential-org { font-size: 0.9rem; color: var(--text-secondary); }
+            .credential-location { font-size: 0.85rem; color: var(--text-muted); margin-top: 0.25rem; }
+            .cluster-summary { animation: fadeIn 0.8s ease-out 0.5s both; }
+            .cluster-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
+            .cluster-stat { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 8px; padding: 1rem; text-align: center; }
+            .cluster-stat-value { display: block; font-family: 'JetBrains Mono', monospace; font-size: 1.5rem; font-weight: 700; color: var(--accent-blue); }
+            .cluster-stat-label { font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em; }
+            .nodes-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+            .node-card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 8px; padding: 1rem; transition: all 0.3s ease; position: relative; overflow: hidden; }
+            .node-card::before { content: ''; position: absolute; top: 0; left: 0; width: 3px; height: 100%; background: var(--accent-green); }
+            .node-card.bare-metal::before { background: var(--accent-yellow); }
+            .node-card:hover { border-color: var(--accent-green); transform: translateY(-2px); }
+            .node-name { font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.5rem; }
+            .node-specs { font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: var(--text-secondary); display: flex; align-items: center; gap: 0.5rem; }
+            .node-divider { color: var(--text-muted); }
+            .node-role { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.1em; margin-top: 0.5rem; }
+            .node-role.bare-metal { color: var(--accent-yellow); }
+            .dashboard-link { display: inline-flex; align-items: center; gap: 0.5rem; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; color: var(--accent-green); text-decoration: none; padding: 0.75rem 1.25rem; background: rgba(0, 255, 136, 0.1); border: 1px solid rgba(0, 255, 136, 0.3); border-radius: 6px; transition: all 0.3s ease; }
+            .dashboard-link:hover { background: rgba(0, 255, 136, 0.2); border-color: var(--accent-green); transform: translateX(5px); }
+            .dashboard-link svg { width: 16px; height: 16px; }
+            .footer { margin-top: 5rem; padding: 2rem 0; border-top: 1px solid var(--border-color); text-align: center; }
+            .footer p { font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: var(--text-muted); }
+            .footer a { color: var(--text-secondary); text-decoration: none; transition: color 0.2s ease; }
+            .footer a:hover { color: var(--accent-green); }
+            @media (max-width: 1024px) { .stats-grid { grid-template-columns: repeat(3, 1fr); } }
+            @media (max-width: 768px) { .container { padding: 1rem; } .header h1 { font-size: 2.5rem; } .stats-grid { grid-template-columns: repeat(2, 1fr); } .stat-value { font-size: 2rem; } .services-grid { grid-template-columns: 1fr; } .credentials-grid { grid-template-columns: 1fr; } .cluster-stats { grid-template-columns: repeat(2, 1fr); } .nodes-grid { grid-template-columns: repeat(2, 1fr); } }
+            @media (max-width: 480px) { .stats-grid { grid-template-columns: 1fr; } .status-banner { padding: 0.75rem 1.25rem; } .status-banner span { font-size: 0.8rem; } }
+        </style>
+    </head>
+    <body>
+        <div class="noise-overlay"></div>
+        <div class="grid-bg"></div>
+        <div class="container">
+            <header class="header">
+                <div class="k8s-logo-container"><div class="k8s-logo-ring"></div><div class="k8s-logo-ring"></div><div class="k8s-logo-ring"></div><div class="k8s-logo-icon">☸</div></div>
+                <h1>Alphonzo Jones Jr.</h1>
+                <h2>Platform Engineer / DevOps Engineer</h2>
+                <p>Building Production-Grade Cloud & Bare Metal Infrastructure</p>
+            </header>
+            <div class="status-banner">
+                <div class="status-dot"></div>
+                <span>All Systems Operational</span>
+                <a href="https://status.alphonzojonesjr.com">View Status</a>
+            </div>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value">19</div>
+                    <div class="stat-label">Live Services</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">6</div>
+                    <div class="stat-label">Cluster Nodes</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">3</div>
+                    <div class="stat-label">Bare Metal</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">99.9%</div>
+                    <div class="stat-label">Uptime</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">2</div>
+                    <div class="stat-label">AWS Certs</div>
+                </div>
+            </div>
+            <div class="section-title">Platform Services</div>
+            <div class="services-grid">
+                <div class="service-card">
+                    <div class="service-header">
+                        <span class="service-name">ArgoCD</span>
+                        <span class="service-status"><span class="dot"></span>Live</span>
+                    </div>
+                    <p class="service-description">GitOps continuous delivery tool for Kubernetes. Automatically syncs cluster state with Git repositories.</p>
+                    <a href="https://argocd.alphonzojonesjr.com" class="service-link">Open ArgoCD <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg></a>
+                </div>
+                <div class="service-card">
+                    <div class="service-header">
+                        <span class="service-name">Grafana</span>
+                        <span class="service-status"><span class="dot"></span>Live</span>
+                    </div>
+                    <p class="service-description">Observability platform with dashboards for metrics visualization, alerting, and monitoring.</p>
+                    <a href="https://grafana.alphonzojonesjr.com" class="service-link">Open Grafana <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg></a>
+                </div>
+                <div class="service-card">
+                    <div class="service-header">
+                        <span class="service-name">HashiCorp Vault</span>
+                        <span class="service-status"><span class="dot"></span>Live</span>
+                    </div>
+                    <p class="service-description">Secrets management platform for secure storage and access control of sensitive data.</p>
+                    <a href="https://vault.alphonzojonesjr.com" class="service-link">Open Vault <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg></a>
+                </div>
+                <div class="service-card">
+                    <div class="service-header">
+                        <span class="service-name">AI Chatbot</span>
+                        <span class="service-status"><span class="dot"></span>Live</span>
+                    </div>
+                    <p class="service-description">Claude-powered AI assistant running on Kubernetes with FastAPI backend.</p>
+                    <a href="https://chat.alphonzojonesjr.com" class="service-link">Open Chatbot <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg></a>
+                </div>
+                <div class="service-card">
+                    <div class="service-header">
+                        <span class="service-name">URL Shortener</span>
+                        <span class="service-status"><span class="dot"></span>Live</span>
+                    </div>
+                    <p class="service-description">Custom URL shortening service with PostgreSQL backend and analytics tracking.</p>
+                    <a href="https://short.alphonzojonesjr.com" class="service-link">Open Shortener <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg></a>
+                </div>
+                <div class="service-card">
+                    <div class="service-header">
+                        <span class="service-name">Task Manager</span>
+                        <span class="service-status"><span class="dot"></span>Live</span>
+                    </div>
+                    <p class="service-description">Full-stack task management application with React frontend and Go backend.</p>
+                    <a href="https://taskapp.alphonzojonesjr.com" class="service-link">Open TaskApp <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg></a>
+                </div>
+                <div class="service-card">
+                    <div class="service-header">
+                        <span class="service-name">n8n Automation</span>
+                        <span class="service-status"><span class="dot"></span>Live</span>
+                    </div>
+                    <p class="service-description">Workflow automation platform for connecting apps and automating tasks.</p>
+                    <a href="https://n8n.alphonzojonesjr.com" class="service-link">Open n8n <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg></a>
+                </div>
+                <div class="service-card">
+                    <div class="service-header">
+                        <span class="service-name">Platform Dashboard</span>
+                        <span class="service-status"><span class="dot"></span>Live</span>
+                    </div>
+                    <p class="service-description">Real-time Kubernetes operations center with pod management and deployment controls.</p>
+                    <a href="https://dash.alphonzojonesjr.com" class="service-link">Open Dashboard <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg></a>
+                </div>
+                <div class="service-card">
+                    <div class="service-header">
+                        <span class="service-name">Kubernetes Dashboard</span>
+                        <span class="service-status"><span class="dot"></span>Live</span>
+                    </div>
+                    <p class="service-description">Native Kubernetes web UI for cluster management and resource visualization.</p>
+                    <a href="https://k8s.alphonzojonesjr.com" class="service-link">Open K8s Dashboard <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg></a>
+                </div>
+                <div class="service-card">
+                    <div class="service-header">
+                        <span class="service-name">Uptime Kuma</span>
+                        <span class="service-status"><span class="dot"></span>Live</span>
+                    </div>
+                    <p class="service-description">Self-hosted monitoring tool tracking service availability and response times.</p>
+                    <a href="https://status.alphonzojonesjr.com" class="service-link">View Status <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg></a>
+                </div>
+                <div class="service-card">
+                    <div class="service-header">
+                        <span class="service-name">Code Server</span>
+                        <span class="service-status"><span class="dot"></span>Live</span>
+                    </div>
+                    <p class="service-description">VS Code in the browser for cloud-based development and cluster management.</p>
+                    <a href="https://code.alphonzojonesjr.com" class="service-link">Open Code Server <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg></a>
+                </div>
+                <div class="service-card">
+                    <div class="service-header">
+                        <span class="service-name">Harbor Registry</span>
+                        <span class="service-status"><span class="dot"></span>Live</span>
+                    </div>
+                    <p class="service-description">Enterprise container registry with vulnerability scanning via Trivy.</p>
+                    <a href="https://registry.alphonzojonesjr.com" class="service-link">Open Harbor <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg></a>
+                </div>
+                <div class="service-card">
+                    <div class="service-header">
+                        <span class="service-name">FileBrowser</span>
+                        <span class="service-status"><span class="dot"></span>Live</span>
+                    </div>
+                    <p class="service-description">Web-based file manager for uploading, downloading, and organizing files.</p>
+                    <a href="https://files.alphonzojonesjr.com" class="service-link">Open FileBrowser <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg></a>
+                </div>
+                <div class="service-card">
+                    <div class="service-header">
+                        <span class="service-name">Technitium DNS</span>
+                        <span class="service-status"><span class="dot"></span>Live</span>
+                    </div>
+                    <p class="service-description">Self-hosted authoritative DNS server with advanced DNS management.</p>
+                    <a href="https://dns.alphonzojonesjr.com" class="service-link">Open DNS <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg></a>
+                </div>
+                <div class="service-card">
+                    <div class="service-header">
+                        <span class="service-name">Cluster API</span>
+                        <span class="service-status"><span class="dot"></span>Live</span>
+                    </div>
+                    <p class="service-description">Custom Python REST API providing real-time Kubernetes cluster metrics.</p>
+                    <a href="https://api.alphonzojonesjr.com/api/cluster" class="service-link">Open API <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg></a>
+                </div>
+                <div class="service-card">
+                    <div class="service-header">
+                        <span class="service-name">Health Dashboard</span>
+                        <span class="service-status"><span class="dot"></span>Live</span>
+                    </div>
+                    <p class="service-description">Real-time dashboard showing cluster health, nodes, pods, and deployments.</p>
+                    <a href="https://health.alphonzojonesjr.com" class="service-link">Open Dashboard <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg></a>
+                </div>
+                <div class="service-card">
+                    <div class="service-header">
+                        <span class="service-name">Demo Environment</span>
+                        <span class="service-status"><span class="dot"></span>Live</span>
+                    </div>
+                    <p class="service-description">Demo and testing environment for showcasing platform capabilities.</p>
+                    <a href="https://demo.alphonzojonesjr.com" class="service-link">Open Demo <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg></a>
+                </div>
+                <div class="service-card">
+                    <div class="service-header">
+                        <span class="service-name">Lab Environment</span>
+                        <span class="service-status"><span class="dot"></span>Live</span>
+                    </div>
+                    <p class="service-description">Experimentation and development sandbox for testing new technologies.</p>
+                    <a href="https://lab.alphonzojonesjr.com" class="service-link">Open Lab <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg></a>
+                </div>
+            </div>
+            <div class="section-title">Cluster Infrastructure</div>
+            <div class="cluster-summary">
+                <div class="cluster-stats">
+                    <div class="cluster-stat">
+                        <span class="cluster-stat-value">6/6</span>
+                        <span class="cluster-stat-label">Nodes Ready</span>
+                    </div>
+                    <div class="cluster-stat">
+                        <span class="cluster-stat-value">3</span>
+                        <span class="cluster-stat-label">Bare Metal</span>
+                    </div>
+                    <div class="cluster-stat">
+                        <span class="cluster-stat-value">3</span>
+                        <span class="cluster-stat-label">VMs (Proxmox)</span>
+                    </div>
+                    <div class="cluster-stat">
+                        <span class="cluster-stat-value">20</span>
+                        <span class="cluster-stat-label">CPU Cores</span>
+                    </div>
+                </div>
+                <div class="nodes-grid">
+                    <div class="node-card">
+                        <div class="node-name">k8s-cp01</div>
+                        <div class="node-specs"><span>2 cores</span><span class="node-divider">•</span><span>15.6 GB</span></div>
+                        <div class="node-role">Control Plane (VM)</div>
+                    </div>
+                    <div class="node-card">
+                        <div class="node-name">k8s-worker01</div>
+                        <div class="node-specs"><span>2 cores</span><span class="node-divider">•</span><span>15.6 GB</span></div>
+                        <div class="node-role">Worker (VM)</div>
+                    </div>
+                    <div class="node-card">
+                        <div class="node-name">k8s-worker02</div>
+                        <div class="node-specs"><span>2 cores</span><span class="node-divider">•</span><span>15.6 GB</span></div>
+                        <div class="node-role">Worker (VM)</div>
+                    </div>
+                    <div class="node-card bare-metal">
+                        <div class="node-name">k8s-worker03</div>
+                        <div class="node-specs"><span>4 cores</span><span class="node-divider">•</span><span>15.6 GB</span></div>
+                        <div class="node-role bare-metal">Worker (Bare Metal)</div>
+                    </div>
+                    <div class="node-card bare-metal">
+                        <div class="node-name">k8s-worker04</div>
+                        <div class="node-specs"><span>4 cores</span><span class="node-divider">•</span><span>15.6 GB</span></div>
+                        <div class="node-role bare-metal">Worker (Bare Metal)</div>
+                    </div>
+                    <div class="node-card bare-metal">
+                        <div class="node-name">k8s-worker05</div>
+                        <div class="node-specs"><span>8 cores</span><span class="node-divider">•</span><span>15.4 GB</span></div>
+                        <div class="node-role bare-metal">Worker (Bare Metal)</div>
+                    </div>
+                </div>
+                <a href="https://health.alphonzojonesjr.com" class="dashboard-link">
+                    <span>View Full Cluster Dashboard</span>
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+                </a>
+            </div>
+            <div class="section-title">Skills & Technologies</div>
+            <div class="skills-container">
+                <span class="skill-tag">Kubernetes</span>
+                <span class="skill-tag">Bare Metal</span>
+                <span class="skill-tag">Terraform</span>
+                <span class="skill-tag">ArgoCD</span>
+                <span class="skill-tag">Prometheus</span>
+                <span class="skill-tag">Grafana</span>
+                <span class="skill-tag">Docker</span>
+                <span class="skill-tag">AWS</span>
+                <span class="skill-tag">Linux</span>
+                <span class="skill-tag">Python</span>
+                <span class="skill-tag">FastAPI</span>
+                <span class="skill-tag">Bash</span>
+                <span class="skill-tag">Git</span>
+                <span class="skill-tag">CI/CD</span>
+                <span class="skill-tag">HashiCorp Vault</span>
+                <span class="skill-tag">Kyverno</span>
+                <span class="skill-tag">Calico</span>
+                <span class="skill-tag">Cloudflare</span>
+                <span class="skill-tag">Proxmox</span>
+            </div>
+            <div class="section-title">Certifications & Education</div>
+            <div class="credentials-grid">
+                <div class="credential-card">
+                    <div class="credential-type">Certification</div>
+                    <div class="credential-title">AWS Cloud Practitioner</div>
+                    <div class="credential-org">Amazon Web Services</div>
+                </div>
+                <div class="credential-card">
+                    <div class="credential-type">Certification</div>
+                    <div class="credential-title">AWS Solutions Architect - Associate</div>
+                    <div class="credential-org">Amazon Web Services</div>
+                </div>
+                <div class="credential-card">
+                    <div class="credential-type">Education</div>
+                    <div class="credential-title">Associate of Applied Science</div>
+                    <div class="credential-org">Cloud Computing Specialization</div>
+                    <div class="credential-location">Northern Virginia Community College · Sterling, VA</div>
+                </div>
+            </div>
+            <footer class="footer">
+                <p>Built with Kubernetes on Bare Metal & Proxmox | <a href="https://status.alphonzojonesjr.com">System Status</a> | © 2026 Alphonzo Jones Jr.</p>
+            </footer>
+        </div>
+    </body>
+    </html>

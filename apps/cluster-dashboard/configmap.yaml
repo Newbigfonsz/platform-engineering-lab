@@ -1,0 +1,125 @@
+apiVersion: v1
+data:
+  index.html: "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n    <meta charset=\"UTF-8\">\n
+    \   <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n
+    \   <title>Cluster Health Dashboard</title>\n    <link href=\"https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css\"
+    rel=\"stylesheet\">\n    <style>\n        * { margin: 0; padding: 0; box-sizing:
+    border-box; }\n        body {\n            font-family: -apple-system, BlinkMacSystemFont,
+    'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;\n            background: linear-gradient(135deg,
+    #1a1a2e 0%, #16213e 50%, #0f3460 100%);\n            min-height: 100vh;\n            color:
+    #fff;\n            padding: 20px;\n        }\n        .header {\n            text-align:
+    center;\n            margin-bottom: 30px;\n            padding: 20px;\n            background:
+    rgba(255,255,255,0.1);\n            border-radius: 15px;\n            backdrop-filter:
+    blur(10px);\n        }\n        .header h1 {\n            font-size: 2.5rem;\n
+    \           margin-bottom: 10px;\n            background: linear-gradient(90deg,
+    #00d4ff, #7b2cbf);\n            -webkit-background-clip: text;\n            -webkit-text-fill-color:
+    transparent;\n        }\n        .header p { color: #aaa; }\n        .stats-grid
+    {\n            display: grid;\n            grid-template-columns: repeat(auto-fit,
+    minmax(200px, 1fr));\n            gap: 20px;\n            margin-bottom: 30px;\n
+    \       }\n        .stat-card {\n            background: rgba(255,255,255,0.1);\n
+    \           border-radius: 15px;\n            padding: 25px;\n            text-align:
+    center;\n            backdrop-filter: blur(10px);\n            border: 1px solid
+    rgba(255,255,255,0.1);\n            transition: transform 0.3s, box-shadow 0.3s;\n
+    \       }\n        .stat-card:hover {\n            transform: translateY(-5px);\n
+    \           box-shadow: 0 10px 40px rgba(0,212,255,0.2);\n        }\n        .stat-card
+    i {\n            font-size: 2.5rem;\n            margin-bottom: 15px;\n            background:
+    linear-gradient(90deg, #00d4ff, #7b2cbf);\n            -webkit-background-clip:
+    text;\n            -webkit-text-fill-color: transparent;\n        }\n        .stat-card
+    .value {\n            font-size: 3rem;\n            font-weight: bold;\n            color:
+    #00d4ff;\n        }\n        .stat-card .label {\n            color: #aaa;\n            margin-top:
+    5px;\n            font-size: 0.9rem;\n            text-transform: uppercase;\n
+    \           letter-spacing: 1px;\n        }\n        .section {\n            background:
+    rgba(255,255,255,0.1);\n            border-radius: 15px;\n            padding:
+    25px;\n            margin-bottom: 20px;\n            backdrop-filter: blur(10px);\n
+    \       }\n        .section h2 {\n            margin-bottom: 20px;\n            display:
+    flex;\n            align-items: center;\n            gap: 10px;\n        }\n        .section
+    h2 i { color: #00d4ff; }\n        .node-grid {\n            display: grid;\n            grid-template-columns:
+    repeat(auto-fit, minmax(280px, 1fr));\n            gap: 15px;\n        }\n        .node-card
+    {\n            background: rgba(0,0,0,0.3);\n            border-radius: 10px;\n
+    \           padding: 20px;\n            border-left: 4px solid #00d4ff;\n        }\n
+    \       .node-card h3 { color: #00d4ff; margin-bottom: 10px; }\n        .node-card
+    .detail { color: #aaa; font-size: 0.9rem; margin: 5px 0; }\n        .node-card
+    .detail span { color: #fff; }\n        .node-card .role { color: #7b2cbf; font-size:
+    0.85rem; margin-top: 10px; font-weight: 500; }\n        .deployments-list {\n
+    \           max-height: 400px;\n            overflow-y: auto;\n        }\n        .deployment-item
+    {\n            display: flex;\n            justify-content: space-between;\n            align-items:
+    center;\n            padding: 12px 15px;\n            background: rgba(0,0,0,0.3);\n
+    \           border-radius: 8px;\n            margin-bottom: 8px;\n        }\n
+    \       .deployment-item .name { font-weight: 500; }\n        .deployment-item
+    .namespace { color: #aaa; font-size: 0.85rem; }\n        .deployment-item .status
+    {\n            padding: 5px 12px;\n            border-radius: 20px;\n            font-size:
+    0.85rem;\n        }\n        .status.healthy { background: #00c853; color: #fff;
+    }\n        .status.warning { background: #ff9800; color: #fff; }\n        .status.error
+    { background: #f44336; color: #fff; }\n        .timestamp {\n            text-align:
+    center;\n            color: #666;\n            margin-top: 20px;\n            font-size:
+    0.85rem;\n        }\n        .refresh-btn {\n            position: fixed;\n            bottom:
+    30px;\n            right: 30px;\n            background: linear-gradient(90deg,
+    #00d4ff, #7b2cbf);\n            border: none;\n            color: #fff;\n            padding:
+    15px 25px;\n            border-radius: 50px;\n            cursor: pointer;\n            font-size:
+    1rem;\n            display: flex;\n            align-items: center;\n            gap:
+    10px;\n            box-shadow: 0 5px 20px rgba(0,212,255,0.4);\n            transition:
+    transform 0.3s;\n        }\n        .refresh-btn:hover { transform: scale(1.05);
+    }\n        .loading { opacity: 0.5; }\n        @keyframes spin { to { transform:
+    rotate(360deg); } }\n        .spinning { animation: spin 1s linear infinite; }\n
+    \   </style>\n</head>\n<body>\n    <div class=\"header\">\n        <h1><i class=\"fas
+    fa-heartbeat\"></i> Cluster Health Dashboard</h1>\n        <p>Real-time Kubernetes
+    cluster monitoring powered by Python API</p>\n    </div>\n\n    <div class=\"stats-grid\"
+    id=\"stats\">\n        <div class=\"stat-card\">\n            <i class=\"fas fa-server\"></i>\n
+    \           <div class=\"value\" id=\"nodes-ready\">-</div>\n            <div
+    class=\"label\">Nodes Ready</div>\n        </div>\n        <div class=\"stat-card\">\n
+    \           <i class=\"fas fa-cubes\"></i>\n            <div class=\"value\" id=\"pods-running\">-</div>\n
+    \           <div class=\"label\">Pods Running</div>\n        </div>\n        <div
+    class=\"stat-card\">\n            <i class=\"fas fa-folder\"></i>\n            <div
+    class=\"value\" id=\"namespaces\">-</div>\n            <div class=\"label\">Namespaces</div>\n
+    \       </div>\n        <div class=\"stat-card\">\n            <i class=\"fas
+    fa-rocket\"></i>\n            <div class=\"value\" id=\"deployments\">-</div>\n
+    \           <div class=\"label\">Deployments</div>\n        </div>\n    </div>\n\n
+    \   <div class=\"section\">\n        <h2><i class=\"fas fa-server\"></i> Nodes</h2>\n
+    \       <div class=\"node-grid\" id=\"nodes-grid\"></div>\n    </div>\n\n    <div
+    class=\"section\">\n        <h2><i class=\"fas fa-rocket\"></i> Deployments</h2>\n
+    \       <div class=\"deployments-list\" id=\"deployments-list\"></div>\n    </div>\n\n
+    \   <div class=\"timestamp\" id=\"timestamp\"></div>\n\n    <button class=\"refresh-btn\"
+    onclick=\"loadData()\">\n        <i class=\"fas fa-sync-alt\" id=\"refresh-icon\"></i>
+    Refresh\n    </button>\n\n    <script>\n        const API_BASE = 'https://api.alphonzojonesjr.com';\n\n
+    \       async function loadData() {\n            const icon = document.getElementById('refresh-icon');\n
+    \           icon.classList.add('spinning');\n\n            try {\n                const
+    clusterRes = await fetch(`${API_BASE}/api/cluster`);\n                const cluster
+    = await clusterRes.json();\n                \n                document.getElementById('nodes-ready').textContent
+    = `${cluster.nodes.ready}/${cluster.nodes.total}`;\n                document.getElementById('pods-running').textContent
+    = cluster.pods.running;\n\n                const nodesRes = await fetch(`${API_BASE}/api/nodes`);\n
+    \               const nodes = await nodesRes.json();\n                \n                const
+    nodesGrid = document.getElementById('nodes-grid');\n                nodesGrid.innerHTML
+    = nodes.nodes.map(node => {\n                    const isBareMetalNode = ['k8s-worker03',
+    'k8s-worker04', 'k8s-worker05'].includes(node.name);\n                    const
+    nodeType = node.name.includes('cp') ? 'Control Plane' : (isBareMetalNode ? 'Worker
+    • Bare Metal' : 'Worker');\n                    return `\n                    <div
+    class=\"node-card\">\n                        <h3><i class=\"fas fa-server\"></i>
+    ${node.name}</h3>\n                        <div class=\"detail\">CPU: <span>${node.cpu}
+    cores</span></div>\n                        <div class=\"detail\">Memory: <span>${(parseInt(node.memory)
+    / 1024 / 1024).toFixed(1)} GB</span></div>\n                        <div class=\"role\">${nodeType}</div>\n
+    \                   </div>\n                `}).join('');\n\n                const
+    nsRes = await fetch(`${API_BASE}/api/namespaces`);\n                const ns =
+    await nsRes.json();\n                document.getElementById('namespaces').textContent
+    = ns.namespaces.length;\n\n                const depsRes = await fetch(`${API_BASE}/api/deployments`);\n
+    \               const deps = await depsRes.json();\n                \n                document.getElementById('deployments').textContent
+    = deps.deployments.length;\n                \n                const depsList =
+    document.getElementById('deployments-list');\n                depsList.innerHTML
+    = deps.deployments\n                    .filter(d => d.ready > 0 || d.namespace
+    === 'cluster-api')\n                    .slice(0, 30)\n                    .map(dep
+    => `\n                        <div class=\"deployment-item\">\n                            <div>\n
+    \                               <div class=\"name\">${dep.name}</div>\n                                <div
+    class=\"namespace\">${dep.namespace}</div>\n                            </div>\n
+    \                           <div class=\"status ${dep.ready > 0 ? 'healthy' :
+    'error'}\">\n                                ${dep.ready > 0 ? 'Healthy' : 'Down'}\n
+    \                           </div>\n                        </div>\n                    `).join('');\n\n
+    \               document.getElementById('timestamp').textContent = \n                    `Last
+    updated: ${new Date().toLocaleString()}`;\n\n            } catch (error) {\n                console.error('Error
+    loading data:', error);\n            }\n\n            icon.classList.remove('spinning');\n
+    \       }\n\n        loadData();\n        setInterval(loadData, 30000);\n    </script>\n</body>\n</html>\n"
+kind: ConfigMap
+metadata:
+  creationTimestamp: "2026-01-23T23:06:07Z"
+  name: cluster-dashboard-html
+  namespace: cluster-dashboard
+  resourceVersion: "9285276"
+  uid: a4470cde-dff9-4aed-942d-b1fa9a46bb47

@@ -24,12 +24,46 @@ data:
     ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
 
     SYSTEM_PROMPT = """You are the AI assistant for Alphonzo Jones Jr.'s Platform Engineering Lab.
-    About the platform: 14 live services on a 3-node Kubernetes cluster.
-    Built with: Kubernetes, Terraform, ArgoCD, Prometheus, Grafana, Vault, Kyverno, Python, FastAPI.
-    Services: Portfolio, TaskApp, URL Shortener, ArgoCD, Grafana, Vault, Pulse, Status Page, Chat Bot.
-    Key URLs: alphonzojonesjr.com, taskapp.alphonzojonesjr.com, short.alphonzojonesjr.com, argocd.alphonzojonesjr.com, grafana.alphonzojonesjr.com, status.alphonzojonesjr.com, chat.alphonzojonesjr.com
-    About Alphonzo: Platform/DevOps Engineer, AAS Cloud Computing from NOVA, AWS CCP + SAA certified.
-    Be helpful, friendly, and concise."""
+
+    PLATFORM OVERVIEW:
+    - 19 live services running on a 6-node Kubernetes cluster
+    - Built with: Kubernetes, Terraform, ArgoCD, Prometheus, Grafana, Vault, Kyverno, Python, FastAPI, React
+    
+    INFRASTRUCTURE:
+    - 6-node Kubernetes cluster (1 control plane + 5 workers)
+    - 3 bare metal worker nodes for production workloads
+    - 2 VM workers + 1 VM control plane on Proxmox virtualization
+    - Cloudflare Tunnel for secure external access
+    - Ubuntu 24.04 LTS, Kubernetes v1.28, containerd runtime
+
+    SERVICES:
+    1. Portfolio (alphonzojonesjr.com) - Main personal website built with FastAPI
+    2. TaskApp (taskapp.alphonzojonesjr.com) - Task management app with FastAPI and React
+    3. URL Shortener (short.alphonzojonesjr.com) - Custom URL shortening service
+    4. ArgoCD (argocd.alphonzojonesjr.com) - GitOps continuous deployment
+    5. Grafana (grafana.alphonzojonesjr.com) - Monitoring and observability dashboards
+    6. Vault (vault.alphonzojonesjr.com) - HashiCorp Vault for secrets management
+    7. Uptime Kuma (status.alphonzojonesjr.com) - Status page and uptime monitoring
+    8. Platform Assistant (chat.alphonzojonesjr.com) - This AI chatbot
+    9. Code Server (code.alphonzojonesjr.com) - VS Code in the browser
+    10. Harbor Registry (registry.alphonzojonesjr.com) - Container image registry
+    11. FileBrowser (files.alphonzojonesjr.com) - Web-based file management
+    12. Dashboard (dash.alphonzojonesjr.com) - Platform operations dashboard
+    13. Cluster Health API (api.alphonzojonesjr.com) - REST API for cluster metrics
+    14. Cluster Dashboard (health.alphonzojonesjr.com) - Visual cluster health monitor
+    15. Kubernetes Dashboard (k8s.alphonzojonesjr.com) - Native K8s web UI
+    16. n8n (n8n.alphonzojonesjr.com) - Workflow automation platform
+    17. Technitium DNS (dns.alphonzojonesjr.com) - Self-hosted DNS server
+    18. Demo (demo.alphonzojonesjr.com) - Demo environment
+    19. Lab (lab.alphonzojonesjr.com) - Experimentation environment
+
+    ABOUT ALPHONZO:
+    - Platform/DevOps Engineer transitioning from sales
+    - AAS in Cloud Computing from Northern Virginia Community College (NOVA)
+    - AWS Certified: Cloud Practitioner (CCP) + Solutions Architect Associate (SAA)
+    - Skills: Kubernetes, Docker, Terraform, Python, CI/CD, GitOps, Cloud Architecture, Bare Metal Infrastructure
+
+    Be helpful, friendly, and concise. Help visitors learn about the platform and Alphonzo's skills."""
 
     class ChatMessage(BaseModel):
         message: str
@@ -88,26 +122,26 @@ data:
     </div>
     <div class="chat-container">
         <div class="suggestions">
-            <span class="suggestion" onclick="askQuestion('What services are running?')">What services are running?</span>
+            <span class="suggestion" onclick="askQuestion('What services are running on this platform?')">What services are running?</span>
             <span class="suggestion" onclick="askQuestion('Tell me about the tech stack')">Tech stack</span>
-            <span class="suggestion" onclick="askQuestion('How do I use the URL shortener?')">URL Shortener</span>
-            <span class="suggestion" onclick="askQuestion('What certifications does Alphonzo have?')">Certifications</span>
+            <span class="suggestion" onclick="askQuestion('What are Alphonzo certifications and skills?')">Certifications</span>
+            <span class="suggestion" onclick="askQuestion('How is the cluster architected?')">Architecture</span>
         </div>
         <div class="messages" id="messages">
             <div class="message assistant">
                 <div class="avatar">{ROBOT_SVG}</div>
-                <div class="bubble">Hi! I'm the Platform Assistant. Ask me anything about Alphonzo's Platform Engineering Lab!</div>
+                <div class="bubble">Hi! I'm the Platform Assistant. I can answer questions about Alphonzo's Platform Engineering Lab, the services running, tech stack, and more. How can I help you?</div>
             </div>
         </div>
         <div class="input-area">
-            <input type="text" id="messageInput" placeholder="Ask me anything..." onkeypress="if(event.key==='Enter')sendMessage()">
+            <input type="text" id="messageInput" placeholder="Ask me anything about the platform..." onkeypress="if(event.key==='Enter')sendMessage()">
             <button onclick="sendMessage()" id="sendBtn">Send</button>
         </div>
     </div>
     <script>
         const ROBOT_SVG = `{ROBOT_SVG}`;
         const USER_SVG = `{USER_SVG}`;
-        
+
         async function sendMessage(){{
             const input = document.getElementById("messageInput");
             const message = input.value.trim();
@@ -136,7 +170,7 @@ data:
             }}
             btn.disabled = false;
         }}
-        
+
         function addMessage(text, type) {{
             const messagesDiv = document.getElementById("messages");
             const div = document.createElement("div");
@@ -146,12 +180,12 @@ data:
             messagesDiv.appendChild(div);
             scrollToBottom();
         }}
-        
+
         function scrollToBottom() {{
             const messagesDiv = document.getElementById("messages");
             messagesDiv.scrollTop = messagesDiv.scrollHeight;
         }}
-        
+
         function askQuestion(q) {{
             document.getElementById("messageInput").value = q;
             sendMessage();
