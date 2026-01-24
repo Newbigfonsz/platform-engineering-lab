@@ -243,7 +243,6 @@ data:
             /* Section Title */
             .section-title {
                 width: 100%;
-                float: none;
                 font-family: 'JetBrains Mono', monospace;
                 font-size: 0.85rem;
                 color: var(--accent-green);
@@ -377,7 +376,6 @@ data:
             .skills-container {
                 display: flex;
                 margin-bottom: 3rem;
-                clear: both;
                 width: 100%;
                 display: flex;
                 flex-wrap: wrap;
@@ -404,7 +402,6 @@ data:
     
             /* Certifications & Education */
             .credentials-grid {
-                clear: both;
                 width: 100%;
                 display: grid;
                 grid-template-columns: repeat(3, 1fr);
@@ -416,7 +413,6 @@ data:
             .cluster-summary {
                 display: block;
                 margin-bottom: 3rem;
-                clear: both;
                 width: 100%;
                 animation: fadeIn 0.8s ease-out 0.5s both;
             }
@@ -631,7 +627,6 @@ data:
                 }
     
                 .credentials-grid {
-                clear: both;
                 width: 100%;
                     grid-template-columns: 1fr;
                 }
@@ -1235,7 +1230,6 @@ data:
             /* Section Title */
             .section-title {
                 width: 100%;
-                float: none;
                 font-family: 'JetBrains Mono', monospace;
                 font-size: 0.85rem;
                 color: var(--accent-blue);
