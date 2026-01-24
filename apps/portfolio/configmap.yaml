@@ -370,7 +370,6 @@ data:
             /* Skills Section */
             .skills-container {
                 display: flex;
-                display: flex;
                 flex-wrap: wrap;
                 gap: 0.75rem;
                 animation: fadeIn 0.8s ease-out 0.6s both;
