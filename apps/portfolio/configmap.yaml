@@ -242,6 +242,8 @@ data:
     
             /* Section Title */
             .section-title {
+                width: 100%;
+                float: none;
                 font-family: 'JetBrains Mono', monospace;
                 font-size: 0.85rem;
                 color: var(--accent-green);
@@ -1232,6 +1234,8 @@ data:
     
             /* Section Title */
             .section-title {
+                width: 100%;
+                float: none;
                 font-family: 'JetBrains Mono', monospace;
                 font-size: 0.85rem;
                 color: var(--accent-blue);
