@@ -373,6 +373,8 @@ data:
     
             /* Skills Section */
             .skills-container {
+                clear: both;
+                width: 100%;
                 display: flex;
                 flex-wrap: wrap;
                 gap: 0.75rem;
@@ -398,6 +400,8 @@ data:
     
             /* Certifications & Education */
             .credentials-grid {
+                clear: both;
+                width: 100%;
                 display: grid;
                 grid-template-columns: repeat(3, 1fr);
                 gap: 1.5rem;
@@ -406,6 +410,8 @@ data:
     
             /* Cluster Infrastructure */
             .cluster-summary {
+                clear: both;
+                width: 100%;
                 animation: fadeIn 0.8s ease-out 0.5s both;
             }
     
@@ -619,6 +625,8 @@ data:
                 }
     
                 .credentials-grid {
+                clear: both;
+                width: 100%;
                     grid-template-columns: 1fr;
                 }
     
