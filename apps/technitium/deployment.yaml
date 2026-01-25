@@ -108,3 +108,16 @@ spec:
             name: technitium-web
             port:
               number: 5380
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: technitium-pvc
+  namespace: technitium
+spec:
+  accessModes:
+  - ReadWriteOnce
+  storageClassName: local-storage
+  resources:
+    requests:
+      storage: 50Gi
