@@ -15,6 +15,6 @@ spec:
     spec:
       containers:
       - name: vanmenh
-        image: aljonesjr/vanmenh:2026jan27
+        image: aljonesjr/vanmenh:2026jan27b
         ports:
         - containerPort: 80
