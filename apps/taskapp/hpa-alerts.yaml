@@ -1,0 +1,57 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: hpa-alerts
+  namespace: monitoring
+  labels:
+    app: kube-prometheus-stack
+    release: monitoring
+spec:
+  groups:
+  - name: hpa-alerts
+    rules:
+    - alert: HPAAtMaxReplicas
+      annotations:
+        description: HPA {{ $labels.horizontalpodautoscaler }} in namespace {{ $labels.namespace }} has been at max replicas for more than 15 minutes.
+        summary: HPA {{ $labels.namespace }}/{{ $labels.horizontalpodautoscaler }} at max capacity
+      expr: |
+        kube_horizontalpodautoscaler_status_current_replicas 
+        == 
+        kube_horizontalpodautoscaler_spec_max_replicas
+      for: 15m
+      labels:
+        severity: warning
+    
+    - alert: HPANearMaxReplicas
+      annotations:
+        description: HPA {{ $labels.horizontalpodautoscaler }} in namespace {{ $labels.namespace }} is at {{ $value | printf "%.0f" }}% of max replicas.
+        summary: HPA {{ $labels.namespace }}/{{ $labels.horizontalpodautoscaler }} nearing max capacity
+      expr: |
+        (kube_horizontalpodautoscaler_status_current_replicas 
+        / 
+        kube_horizontalpodautoscaler_spec_max_replicas) * 100 > 80
+      for: 10m
+      labels:
+        severity: warning
+    
+    - alert: HPAScalingDisabled
+      annotations:
+        description: HPA {{ $labels.horizontalpodautoscaler }} in namespace {{ $labels.namespace }} cannot scale - metrics unavailable.
+        summary: HPA {{ $labels.namespace }}/{{ $labels.horizontalpodautoscaler }} scaling disabled
+      expr: |
+        kube_horizontalpodautoscaler_status_condition{condition="ScalingActive",status="false"} == 1
+      for: 5m
+      labels:
+        severity: critical
+    
+    - alert: HPAUnableToScale
+      annotations:
+        description: HPA {{ $labels.horizontalpodautoscaler }} in namespace {{ $labels.namespace }} desired replicas != current replicas for 10 minutes.
+        summary: HPA {{ $labels.namespace }}/{{ $labels.horizontalpodautoscaler }} unable to scale
+      expr: |
+        kube_horizontalpodautoscaler_status_desired_replicas 
+        != 
+        kube_horizontalpodautoscaler_status_current_replicas
+      for: 10m
+      labels:
+        severity: warning
