@@ -13,11 +13,25 @@ spec:
       values: |
         promtail:
           enabled: true
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 128Mi
         loki:
           persistence:
             enabled: false
           image:
             tag: 2.9.0
+          resources:
+            requests:
+              cpu: 100m
+              memory: 512Mi
+            limits:
+              cpu: 500m
+              memory: 1Gi
   destination:
     server: https://kubernetes.default.svc
     namespace: monitoring
