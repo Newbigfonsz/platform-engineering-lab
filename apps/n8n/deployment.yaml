@@ -17,14 +17,21 @@ spec:
     spec:
       initContainers:
       - name: fix-permissions
-        image: busybox:latest
+        image: busybox:1.36
         command: ["sh", "-c", "chown -R 1000:1000 /data"]
         volumeMounts:
         - name: data
           mountPath: /data
+        resources:
+          requests:
+            cpu: 10m
+            memory: 16Mi
+          limits:
+            cpu: 100m
+            memory: 64Mi
       containers:
       - name: n8n
-        image: n8nio/n8n:latest
+        image: n8nio/n8n:1.76.1
         ports:
         - containerPort: 5678
         env:
@@ -38,6 +45,13 @@ spec:
           value: https://n8n.alphonzojonesjr.com/
         - name: GENERIC_TIMEZONE
           value: America/New_York
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            cpu: 1000m
+            memory: 1Gi
         volumeMounts:
         - name: data
           mountPath: /home/node/.n8n
