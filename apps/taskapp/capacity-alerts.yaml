@@ -1,0 +1,71 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: capacity-alerts
+  namespace: monitoring
+  labels:
+    app: kube-prometheus-stack
+    release: monitoring
+spec:
+  groups:
+  - name: capacity-alerts
+    rules:
+    - alert: NodeCPUNearCapacity
+      annotations:
+        description: "Node {{ $labels.node }} CPU usage is {{ $value | printf \"%.0f\" }}% for 30 minutes."
+        summary: "Node {{ $labels.node }} approaching CPU capacity"
+      expr: |
+        (1 - avg by(node) (rate(node_cpu_seconds_total{mode="idle"}[5m]))) * 100 > 75
+      for: 30m
+      labels:
+        severity: warning
+
+    - alert: NodeMemoryNearCapacity
+      annotations:
+        description: "Node {{ $labels.node }} memory usage is {{ $value | printf \"%.0f\" }}% for 30 minutes."
+        summary: "Node {{ $labels.node }} approaching memory capacity"
+      expr: |
+        (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 75
+      for: 30m
+      labels:
+        severity: warning
+
+    - alert: PVCNearCapacity
+      annotations:
+        description: "PVC {{ $labels.persistentvolumeclaim }} in {{ $labels.namespace }} is {{ $value | printf \"%.0f\" }}% full."
+        summary: "PVC {{ $labels.namespace }}/{{ $labels.persistentvolumeclaim }} near capacity"
+      expr: |
+        (kubelet_volume_stats_used_bytes / kubelet_volume_stats_capacity_bytes) * 100 > 75
+      for: 15m
+      labels:
+        severity: warning
+
+    - alert: ClusterCPUOvercommit
+      annotations:
+        description: "Cluster CPU requests exceed {{ $value | printf \"%.0f\" }}% of allocatable capacity."
+        summary: "Cluster CPU overcommitted"
+      expr: |
+        sum(kube_pod_container_resource_requests{resource="cpu"}) / sum(kube_node_status_allocatable{resource="cpu"}) * 100 > 80
+      for: 15m
+      labels:
+        severity: warning
+
+    - alert: ClusterMemoryOvercommit
+      annotations:
+        description: "Cluster memory requests exceed {{ $value | printf \"%.0f\" }}% of allocatable capacity."
+        summary: "Cluster memory overcommitted"
+      expr: |
+        sum(kube_pod_container_resource_requests{resource="memory"}) / sum(kube_node_status_allocatable{resource="memory"}) * 100 > 80
+      for: 15m
+      labels:
+        severity: warning
+
+    - alert: NamespaceQuotaNearLimit
+      annotations:
+        description: "Namespace {{ $labels.namespace }} is using {{ $value | printf \"%.0f\" }}% of its {{ $labels.resource }} quota."
+        summary: "Namespace {{ $labels.namespace }} near quota limit"
+      expr: |
+        kube_resourcequota{type="used"} / ignoring(type) kube_resourcequota{type="hard"} * 100 > 80
+      for: 15m
+      labels:
+        severity: warning
