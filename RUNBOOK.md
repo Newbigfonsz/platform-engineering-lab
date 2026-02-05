@@ -410,3 +410,151 @@ kubectl get secrets -n <namespace>
 
 *Last Updated: February 2026*
 *Maintainer: Alphonzo Jones Jr*
+
+---
+
+## 🔐 Dynamic Database Secrets (Vault)
+
+### Architecture
+- **Engine**: Database secrets engine
+- **Backend**: PostgreSQL plugin
+- **TTL**: 1 hour (auto-renewed)
+- **Rotation**: Automatic - new creds on pod restart
+
+### How It Works
+```
+┌─────────────┐     ┌─────────────┐     ┌─────────────┐
+│  Pod Starts │ ──▶ │ Vault Agent │ ──▶ │   Vault     │
+└─────────────┘     │  (sidecar)  │     │  Database   │
+                    └─────────────┘     │   Engine    │
+                           │            └──────┬──────┘
+                           ▼                   │
+                    ┌─────────────┐            ▼
+                    │ /vault/     │     ┌─────────────┐
+                    │ secrets/    │     │ PostgreSQL  │
+                    │ db-creds    │     │ CREATE ROLE │
+                    └─────────────┘     └─────────────┘
+```
+
+### Check Dynamic Credentials
+```bash
+# See current credentials in pod
+kubectl exec -n taskapp deploy/taskapp-backend -c backend -- cat /vault/secrets/db-creds
+
+# List all dynamic users in PostgreSQL
+kubectl exec -n taskapp deploy/postgres -- psql -U taskapp -d taskappdb -c "\du" | grep v-kubernet
+
+# Check credential expiry
+kubectl exec -n taskapp deploy/postgres -- psql -U taskapp -d taskappdb -c "SELECT usename, valuntil FROM pg_user WHERE usename LIKE 'v-%';"
+```
+
+### Generate New Root Token
+If root token is lost:
+```bash
+# Start generation (need 3 recovery keys)
+kubectl exec -n vault vault-0 -- vault operator generate-root -init
+
+# Save the OTP, then provide recovery keys
+kubectl exec -n vault vault-0 -- vault operator generate-root -nonce=<NONCE> <RECOVERY_KEY_1>
+kubectl exec -n vault vault-0 -- vault operator generate-root -nonce=<NONCE> <RECOVERY_KEY_2>
+kubectl exec -n vault vault-0 -- vault operator generate-root -nonce=<NONCE> <RECOVERY_KEY_3>
+
+# Decode the token
+kubectl exec -n vault vault-0 -- vault operator generate-root -decode=<ENCODED_TOKEN> -otp=<OTP>
+```
+
+### Vault Policies
+```bash
+# View taskapp policy
+kubectl exec -n vault vault-0 -- vault policy read taskapp-policy
+
+# Update policy
+kubectl exec -n vault vault-0 -- sh -c 'vault policy write taskapp-policy - <<POLICY
+path "internal/data/database/config" {
+  capabilities = ["read"]
+}
+path "database/creds/taskapp-role" {
+  capabilities = ["read"]
+}
+POLICY'
+```
+
+### Database Secrets Engine Management
+```bash
+# List database connections
+kubectl exec -n vault vault-0 -- vault list database/config
+
+# Read connection config
+kubectl exec -n vault vault-0 -- vault read database/config/taskapp-postgres
+
+# Rotate root credentials (use with caution)
+kubectl exec -n vault vault-0 -- vault write -force database/rotate-root/taskapp-postgres
+
+# List roles
+kubectl exec -n vault vault-0 -- vault list database/roles
+
+# Read role config
+kubectl exec -n vault vault-0 -- vault read database/roles/taskapp-role
+```
+
+### Troubleshooting Dynamic Secrets
+
+**Pod stuck in Init**
+```bash
+# Check Vault agent logs
+kubectl logs -n taskapp <pod> -c vault-agent-init
+
+# Verify Kubernetes auth
+kubectl exec -n vault vault-0 -- vault read auth/kubernetes/role/taskapp-role
+```
+
+**Credentials not rotating**
+```bash
+# Check lease
+kubectl exec -n vault vault-0 -- vault list sys/leases/lookup/database/creds/taskapp-role
+
+# Force revoke all leases (causes brief outage)
+kubectl exec -n vault vault-0 -- vault lease revoke -prefix database/creds/taskapp-role
+```
+
+**Database connection refused**
+```bash
+# Test Vault can reach PostgreSQL
+kubectl exec -n vault vault-0 -- vault write database/config/taskapp-postgres \
+    plugin_name=postgresql-database-plugin \
+    allowed_roles="taskapp-role" \
+    connection_url="postgresql://{{username}}:{{password}}@postgres.taskapp.svc.cluster.local:5432/taskappdb?sslmode=disable" \
+    username="taskapp" \
+    password="<CURRENT_PASSWORD>"
+```
+
+---
+
+## 📊 Platform Summary
+
+### Monthly Costs
+| Service | Cost |
+|---------|------|
+| AWS KMS | ~$1 |
+| Backblaze B2 | ~$5 |
+| **Total** | **~$6/month** |
+
+### Key Endpoints
+| Service | URL |
+|---------|-----|
+| TaskApp | https://taskapp.alphonzojonesjr.com |
+| ArgoCD | https://argocd.alphonzojonesjr.com |
+| Grafana | https://grafana.alphonzojonesjr.com |
+| Vault | https://vault.alphonzojonesjr.com |
+| Code Server | https://code.alphonzojonesjr.com |
+
+### Recovery Keys Location
+Store securely (password manager, safe):
+- 5 Vault Recovery Keys
+- Vault Root Token (or ability to regenerate)
+- AWS KMS Key ID: `63bdb59f-27af-486a-94a1-be6bc3a98976`
+
+---
+
+*Last Updated: February 2026*
+*Maintainer: Alphonzo Jones Jr*
