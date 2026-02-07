@@ -15,6 +15,6 @@ spec:
     spec:
       containers:
       - name: vanmenh
-        image: aljonesjr/vanmenh:v5-lifepath
+        image: aljonesjr/vanmenh:v6-premium
         ports:
         - containerPort: 80

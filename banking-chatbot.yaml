@@ -1,0 +1,112 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: banking-chatbot-html
+data:
+  index.html: |
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>SecureBank AI - K8s Demo</title>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                height: 100vh;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                margin: 0;
+            }
+            .container {
+                background: white;
+                padding: 40px;
+                border-radius: 20px;
+                box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+                text-align: center;
+                max-width: 500px;
+            }
+            h1 { color: #667eea; margin-bottom: 20px; }
+            .status { color: #28a745; font-weight: bold; margin: 20px 0; }
+            .info { color: #666; line-height: 1.6; }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>🏦 SecureBank AI</h1>
+            <div class="status">✅ Successfully Deployed on Kubernetes!</div>
+            <div class="info">
+                <p><strong>Infrastructure:</strong> Alphonzo's Production K8s Cluster</p>
+                <p><strong>Nodes:</strong> 6-node cluster with MetalLB & Calico</p>
+                <p><strong>Security:</strong> TLS via cert-manager & Let's Encrypt</p>
+                <p><strong>Monitoring:</strong> Prometheus & Grafana</p>
+                <p><strong>GitOps:</strong> ArgoCD deployment ready</p>
+            </div>
+        </div>
+    </body>
+    </html>
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: banking-chatbot
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: banking-chatbot
+  template:
+    metadata:
+      labels:
+        app: banking-chatbot
+    spec:
+      containers:
+      - name: banking-chatbot
+        image: nginx:alpine
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - name: html-content
+          mountPath: /usr/share/nginx/html
+      volumes:
+      - name: html-content
+        configMap:
+          name: banking-chatbot-html
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: banking-chatbot-svc
+spec:
+  selector:
+    app: banking-chatbot
+  ports:
+  - port: 80
+    targetPort: 80
+    protocol: TCP
+  type: ClusterIP
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: banking-chatbot-ingress
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - banking.alphonzojonesjr.com
+    secretName: banking-chatbot-tls
+  rules:
+  - host: banking.alphonzojonesjr.com
+    http:
+      paths:
+      - path: /banking
+        pathType: Prefix
+        backend:
+          service:
+            name: banking-chatbot-svc
+            port:
+              number: 80
