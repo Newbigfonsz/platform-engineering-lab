@@ -150,3 +150,42 @@ kubectl rollout restart deployment cloudflared -n cloudflared
 ### Disaster Recovery
 
 See [DISASTER-RECOVERY.md](DISASTER-RECOVERY.md)
+
+---
+
+## UPS Management
+
+### Check UPS Status
+```bash
+ssh root@10.10.0.210
+upsc cyberpower@localhost
+```
+
+### Key Metrics
+```bash
+upsc cyberpower@localhost ups.status battery.charge battery.runtime ups.load
+```
+
+### Test Discord Alert
+```bash
+/usr/local/bin/ups-notify.sh online
+```
+
+### Power Outage Response
+1. Discord alert received: "⚡ POWER OUTAGE"
+2. UPS provides ~60 min runtime
+3. At 10% battery, Proxmox auto-shuts down
+4. When power returns, manually start Proxmox
+5. VMs auto-start, K8s cluster recovers
+
+### Manual Shutdown (Extended Outage)
+```bash
+# If power won't return soon, graceful shutdown:
+ssh root@10.10.0.210
+# Shutdown VMs first
+qm shutdown 103
+qm shutdown 104
+qm shutdown 105
+# Then shutdown Proxmox
+shutdown -h now
+```
