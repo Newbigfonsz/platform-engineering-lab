@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: vanmenh
-        image: aljonesjr/vanmenh:auth
+        image: aljonesjr/vanmenh:latest
         ports:
         - containerPort: 3000
         env:
@@ -41,6 +41,16 @@ spec:
             secretKeyRef:
               name: vanmenh-secrets
               key: google-client-secret
+        - name: STRIPE_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: vanmenh-secrets
+              key: stripe-secret-key
+        - name: STRIPE_WEBHOOK_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: vanmenh-secrets
+              key: stripe-webhook-secret
         livenessProbe:
           httpGet:
             path: /health
