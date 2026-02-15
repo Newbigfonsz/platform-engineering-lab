@@ -137,3 +137,9 @@ spec:
     - namespaceSelector:
         matchLabels:
           kubernetes.io/metadata.name: monitoring
+  # Allow HTTPS egress (for pip/npm installs and external APIs)
+  - ports:
+    - port: 443
+      protocol: TCP
+    - port: 80
+      protocol: TCP
