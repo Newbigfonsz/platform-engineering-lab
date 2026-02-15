@@ -19,7 +19,26 @@ spec:
             hosts:
               - grafana.alphonzojonesjr.com
             annotations:
-              nginx.ingress.kubernetes.io/ssl-redirect: "false"
+              nginx.ingress.kubernetes.io/ssl-redirect: "true"
+              cert-manager.io/cluster-issuer: letsencrypt-prod
+            tls:
+              - hosts:
+                  - grafana.alphonzojonesjr.com
+                secretName: grafana-tls
+          additionalDataSources:
+            - name: Tempo
+              type: tempo
+              url: http://tempo.monitoring.svc:3100
+              access: proxy
+              jsonData:
+                tracesToMetrics:
+                  datasourceUid: prometheus
+                serviceMap:
+                  datasourceUid: prometheus
+                nodeGraph:
+                  enabled: true
+                tracesToLogs:
+                  datasourceUid: loki
   destination:
     server: https://kubernetes.default.svc
     namespace: monitoring

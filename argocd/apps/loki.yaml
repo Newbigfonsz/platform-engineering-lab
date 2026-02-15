@@ -22,7 +22,9 @@ spec:
               memory: 128Mi
         loki:
           persistence:
-            enabled: false
+            enabled: true
+            size: 10Gi
+            storageClassName: longhorn
           image:
             tag: 2.9.0
           resources:
