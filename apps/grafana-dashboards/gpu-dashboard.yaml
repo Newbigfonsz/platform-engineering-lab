@@ -1,0 +1,81 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: gpu-metrics-dashboard
+  namespace: monitoring
+  labels:
+    grafana_dashboard: "1"
+data:
+  gpu-metrics.json: |
+    {
+      "annotations": {"list": []},
+      "editable": true,
+      "title": "GPU Metrics - NVIDIA Tesla P4",
+      "uid": "gpu-metrics",
+      "tags": ["gpu", "nvidia", "ollama"],
+      "timezone": "browser",
+      "panels": [
+        {
+          "title": "GPU Utilization",
+          "type": "gauge",
+          "gridPos": {"h": 8, "w": 6, "x": 0, "y": 0},
+          "targets": [{"expr": "DCGM_FI_DEV_GPU_UTIL", "legendFormat": "GPU {{gpu}}"}],
+          "fieldConfig": {"defaults": {"unit": "percent", "min": 0, "max": 100, "thresholds": {"steps": [{"color": "green", "value": 0}, {"color": "yellow", "value": 70}, {"color": "red", "value": 90}]}}}
+        },
+        {
+          "title": "GPU Memory Used",
+          "type": "gauge",
+          "gridPos": {"h": 8, "w": 6, "x": 6, "y": 0},
+          "targets": [{"expr": "DCGM_FI_DEV_FB_USED / (DCGM_FI_DEV_FB_USED + DCGM_FI_DEV_FB_FREE) * 100", "legendFormat": "Memory %"}],
+          "fieldConfig": {"defaults": {"unit": "percent", "min": 0, "max": 100, "thresholds": {"steps": [{"color": "green", "value": 0}, {"color": "yellow", "value": 70}, {"color": "red", "value": 90}]}}}
+        },
+        {
+          "title": "GPU Temperature",
+          "type": "gauge",
+          "gridPos": {"h": 8, "w": 6, "x": 12, "y": 0},
+          "targets": [{"expr": "DCGM_FI_DEV_GPU_TEMP", "legendFormat": "Temp"}],
+          "fieldConfig": {"defaults": {"unit": "celsius", "min": 0, "max": 100, "thresholds": {"steps": [{"color": "green", "value": 0}, {"color": "yellow", "value": 70}, {"color": "red", "value": 85}]}}}
+        },
+        {
+          "title": "GPU Power Usage",
+          "type": "gauge",
+          "gridPos": {"h": 8, "w": 6, "x": 18, "y": 0},
+          "targets": [{"expr": "DCGM_FI_DEV_POWER_USAGE", "legendFormat": "Power"}],
+          "fieldConfig": {"defaults": {"unit": "watt", "min": 0, "max": 75, "thresholds": {"steps": [{"color": "green", "value": 0}, {"color": "yellow", "value": 50}, {"color": "red", "value": 65}]}}}
+        },
+        {
+          "title": "GPU Utilization Over Time",
+          "type": "timeseries",
+          "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
+          "targets": [{"expr": "DCGM_FI_DEV_GPU_UTIL", "legendFormat": "Utilization %"}],
+          "fieldConfig": {"defaults": {"unit": "percent"}}
+        },
+        {
+          "title": "GPU Memory Over Time",
+          "type": "timeseries",
+          "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8},
+          "targets": [
+            {"expr": "DCGM_FI_DEV_FB_USED", "legendFormat": "Used (MiB)"},
+            {"expr": "DCGM_FI_DEV_FB_FREE", "legendFormat": "Free (MiB)"}
+          ],
+          "fieldConfig": {"defaults": {"unit": "decmbytes"}}
+        },
+        {
+          "title": "GPU Temperature Over Time",
+          "type": "timeseries",
+          "gridPos": {"h": 8, "w": 12, "x": 0, "y": 16},
+          "targets": [{"expr": "DCGM_FI_DEV_GPU_TEMP", "legendFormat": "Temperature"}],
+          "fieldConfig": {"defaults": {"unit": "celsius", "thresholds": {"steps": [{"color": "green", "value": 0}, {"color": "red", "value": 85}]}}}
+        },
+        {
+          "title": "Ollama Pod Status",
+          "type": "stat",
+          "gridPos": {"h": 8, "w": 12, "x": 12, "y": 16},
+          "targets": [{"expr": "kube_pod_status_phase{namespace=\"ollama\",phase=\"Running\"}", "legendFormat": "Running Pods"}],
+          "fieldConfig": {"defaults": {"thresholds": {"steps": [{"color": "red", "value": 0}, {"color": "green", "value": 1}]}}}
+        }
+      ],
+      "time": {"from": "now-1h", "to": "now"},
+      "refresh": "30s",
+      "schemaVersion": 38
+    }

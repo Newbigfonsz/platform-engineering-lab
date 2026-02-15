@@ -1,0 +1,82 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: platform-store-dashboard
+  namespace: monitoring
+  labels:
+    grafana_dashboard: "1"
+data:
+  platform-store.json: |
+    {
+      "annotations": {"list": []},
+      "editable": true,
+      "title": "PlatformStore - Application Metrics",
+      "uid": "platform-store-app",
+      "tags": ["platform-store", "microservices"],
+      "timezone": "browser",
+      "panels": [
+        {
+          "title": "Request Rate by Service",
+          "type": "timeseries",
+          "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+          "targets": [{
+            "expr": "sum(rate(nginx_ingress_controller_requests{exported_namespace=\"platform-store\"}[5m])) by (exported_service)",
+            "legendFormat": "{{exported_service}}"
+          }],
+          "fieldConfig": {"defaults": {"unit": "reqps"}}
+        },
+        {
+          "title": "Error Rate (5xx)",
+          "type": "timeseries",
+          "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+          "targets": [{
+            "expr": "sum(rate(nginx_ingress_controller_requests{exported_namespace=\"platform-store\",status=~\"5..\"}[5m])) by (exported_service)",
+            "legendFormat": "{{exported_service}} errors"
+          }],
+          "fieldConfig": {"defaults": {"unit": "reqps", "color": {"mode": "palette-classic"}}}
+        },
+        {
+          "title": "Response Latency p95",
+          "type": "timeseries",
+          "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
+          "targets": [{
+            "expr": "histogram_quantile(0.95, sum(rate(nginx_ingress_controller_request_duration_seconds_bucket{exported_namespace=\"platform-store\"}[5m])) by (le, exported_service))",
+            "legendFormat": "p95 {{exported_service}}"
+          }],
+          "fieldConfig": {"defaults": {"unit": "s"}}
+        },
+        {
+          "title": "Response Latency p50",
+          "type": "timeseries",
+          "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8},
+          "targets": [{
+            "expr": "histogram_quantile(0.50, sum(rate(nginx_ingress_controller_request_duration_seconds_bucket{exported_namespace=\"platform-store\"}[5m])) by (le, exported_service))",
+            "legendFormat": "p50 {{exported_service}}"
+          }],
+          "fieldConfig": {"defaults": {"unit": "s"}}
+        },
+        {
+          "title": "Pod CPU Usage",
+          "type": "timeseries",
+          "gridPos": {"h": 8, "w": 12, "x": 0, "y": 16},
+          "targets": [{
+            "expr": "sum(rate(container_cpu_usage_seconds_total{namespace=\"platform-store\",container!=\"\"}[5m])) by (pod)",
+            "legendFormat": "{{pod}}"
+          }],
+          "fieldConfig": {"defaults": {"unit": "short"}}
+        },
+        {
+          "title": "Pod Memory Usage",
+          "type": "timeseries",
+          "gridPos": {"h": 8, "w": 12, "x": 12, "y": 16},
+          "targets": [{
+            "expr": "sum(container_memory_working_set_bytes{namespace=\"platform-store\",container!=\"\"}) by (pod)",
+            "legendFormat": "{{pod}}"
+          }],
+          "fieldConfig": {"defaults": {"unit": "bytes"}}
+        }
+      ],
+      "time": {"from": "now-1h", "to": "now"},
+      "refresh": "30s",
+      "schemaVersion": 38
+    }

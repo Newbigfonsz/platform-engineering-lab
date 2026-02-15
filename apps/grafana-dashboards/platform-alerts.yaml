@@ -1,0 +1,74 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: platform-alerts
+  namespace: monitoring
+  labels:
+    release: monitoring
+spec:
+  groups:
+  - name: platform-store
+    rules:
+    - alert: PlatformStoreHighErrorRate
+      expr: >
+        sum(rate(nginx_ingress_controller_requests{exported_namespace="platform-store",status=~"5.."}[5m]))
+        /
+        sum(rate(nginx_ingress_controller_requests{exported_namespace="platform-store"}[5m]))
+        > 0.05
+      for: 5m
+      labels:
+        severity: critical
+        service: platform-store
+      annotations:
+        summary: "PlatformStore error rate exceeds 5%"
+        description: "The 5xx error rate for PlatformStore is {{ $value | humanizePercentage }}."
+    - alert: PlatformStoreHighLatency
+      expr: >
+        histogram_quantile(0.95,
+          sum(rate(nginx_ingress_controller_request_duration_seconds_bucket{exported_namespace="platform-store"}[5m])) by (le)
+        ) > 2
+      for: 5m
+      labels:
+        severity: warning
+        service: platform-store
+      annotations:
+        summary: "PlatformStore p95 latency exceeds 2s"
+        description: "The p95 latency for PlatformStore is {{ $value }}s."
+  - name: gpu
+    rules:
+    - alert: GPUHighTemperature
+      expr: DCGM_FI_DEV_GPU_TEMP > 85
+      for: 5m
+      labels:
+        severity: critical
+        service: gpu
+      annotations:
+        summary: "GPU temperature exceeds 85C"
+        description: "GPU temperature is {{ $value }}C. Check cooling."
+    - alert: GPUHighMemoryUsage
+      expr: DCGM_FI_DEV_FB_USED / (DCGM_FI_DEV_FB_USED + DCGM_FI_DEV_FB_FREE) * 100 > 90
+      for: 10m
+      labels:
+        severity: warning
+        service: gpu
+      annotations:
+        summary: "GPU memory usage exceeds 90%"
+        description: "GPU memory usage is {{ $value }}%."
+  - name: platform-health
+    rules:
+    - alert: ArgoAppUnhealthy
+      expr: argocd_app_info{health_status!="Healthy"} == 1
+      for: 10m
+      labels:
+        severity: warning
+      annotations:
+        summary: "ArgoCD app {{ $labels.name }} is unhealthy"
+        description: "App {{ $labels.name }} has health status {{ $labels.health_status }}."
+    - alert: CertificateExpiringSoon
+      expr: certmanager_certificate_expiration_timestamp_seconds - time() < 604800
+      for: 1h
+      labels:
+        severity: warning
+      annotations:
+        summary: "Certificate {{ $labels.name }} expiring within 7 days"
+        description: "Certificate {{ $labels.name }} in {{ $labels.namespace }} expires in {{ $value | humanizeDuration }}."

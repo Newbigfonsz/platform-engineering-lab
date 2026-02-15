@@ -1,0 +1,103 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: platform-overview-dashboard
+  namespace: monitoring
+  labels:
+    grafana_dashboard: "1"
+data:
+  platform-overview.json: |
+    {
+      "annotations": {"list": []},
+      "editable": true,
+      "title": "Platform Overview - Golden Signals",
+      "uid": "platform-overview",
+      "tags": ["platform", "overview", "golden-signals"],
+      "timezone": "browser",
+      "panels": [
+        {
+          "title": "Cluster Nodes Ready",
+          "type": "stat",
+          "gridPos": {"h": 4, "w": 4, "x": 0, "y": 0},
+          "targets": [{"expr": "sum(kube_node_status_condition{condition=\"Ready\",status=\"true\"})", "legendFormat": "Nodes"}],
+          "fieldConfig": {"defaults": {"thresholds": {"steps": [{"color": "red", "value": 0}, {"color": "yellow", "value": 4}, {"color": "green", "value": 6}]}}}
+        },
+        {
+          "title": "Running Pods",
+          "type": "stat",
+          "gridPos": {"h": 4, "w": 4, "x": 4, "y": 0},
+          "targets": [{"expr": "sum(kube_pod_status_phase{phase=\"Running\"})", "legendFormat": "Pods"}],
+          "fieldConfig": {"defaults": {"thresholds": {"steps": [{"color": "red", "value": 0}, {"color": "green", "value": 1}]}}}
+        },
+        {
+          "title": "Namespaces",
+          "type": "stat",
+          "gridPos": {"h": 4, "w": 4, "x": 8, "y": 0},
+          "targets": [{"expr": "count(kube_namespace_labels)", "legendFormat": "Namespaces"}],
+          "fieldConfig": {"defaults": {"thresholds": {"steps": [{"color": "blue", "value": 0}]}}}
+        },
+        {
+          "title": "ArgoCD Apps Healthy",
+          "type": "stat",
+          "gridPos": {"h": 4, "w": 4, "x": 12, "y": 0},
+          "targets": [{"expr": "sum(argocd_app_info{health_status=\"Healthy\"})", "legendFormat": "Healthy"}],
+          "fieldConfig": {"defaults": {"thresholds": {"steps": [{"color": "red", "value": 0}, {"color": "green", "value": 1}]}}}
+        },
+        {
+          "title": "Certificates Valid",
+          "type": "stat",
+          "gridPos": {"h": 4, "w": 4, "x": 16, "y": 0},
+          "targets": [{"expr": "sum(certmanager_certificate_ready_status{condition=\"True\"})", "legendFormat": "Valid Certs"}],
+          "fieldConfig": {"defaults": {"thresholds": {"steps": [{"color": "red", "value": 0}, {"color": "green", "value": 1}]}}}
+        },
+        {
+          "title": "Kyverno Policy Violations",
+          "type": "stat",
+          "gridPos": {"h": 4, "w": 4, "x": 20, "y": 0},
+          "targets": [{"expr": "sum(kyverno_policy_results_total{rule_result=\"fail\"}) or vector(0)", "legendFormat": "Violations"}],
+          "fieldConfig": {"defaults": {"thresholds": {"steps": [{"color": "green", "value": 0}, {"color": "yellow", "value": 1}, {"color": "red", "value": 10}]}}}
+        },
+        {
+          "title": "Cluster CPU Usage",
+          "type": "timeseries",
+          "gridPos": {"h": 8, "w": 12, "x": 0, "y": 4},
+          "targets": [
+            {"expr": "sum(rate(node_cpu_seconds_total{mode!=\"idle\"}[5m])) by (instance)", "legendFormat": "{{instance}}"}
+          ],
+          "fieldConfig": {"defaults": {"unit": "short"}}
+        },
+        {
+          "title": "Cluster Memory Usage",
+          "type": "timeseries",
+          "gridPos": {"h": 8, "w": 12, "x": 12, "y": 4},
+          "targets": [
+            {"expr": "(node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes * 100", "legendFormat": "{{instance}}"}
+          ],
+          "fieldConfig": {"defaults": {"unit": "percent"}}
+        },
+        {
+          "title": "Ingress Request Rate (All Services)",
+          "type": "timeseries",
+          "gridPos": {"h": 8, "w": 12, "x": 0, "y": 12},
+          "targets": [{"expr": "sum(rate(nginx_ingress_controller_requests[5m])) by (exported_namespace)", "legendFormat": "{{exported_namespace}}"}],
+          "fieldConfig": {"defaults": {"unit": "reqps"}}
+        },
+        {
+          "title": "Ingress Error Rate (All Services)",
+          "type": "timeseries",
+          "gridPos": {"h": 8, "w": 12, "x": 12, "y": 12},
+          "targets": [{"expr": "sum(rate(nginx_ingress_controller_requests{status=~\"5..\"}[5m])) by (exported_namespace)", "legendFormat": "{{exported_namespace}} 5xx"}],
+          "fieldConfig": {"defaults": {"unit": "reqps"}}
+        },
+        {
+          "title": "PVC Usage",
+          "type": "table",
+          "gridPos": {"h": 8, "w": 24, "x": 0, "y": 20},
+          "targets": [{"expr": "kubelet_volume_stats_used_bytes / kubelet_volume_stats_capacity_bytes * 100", "legendFormat": "{{persistentvolumeclaim}}", "format": "table", "instant": true}],
+          "fieldConfig": {"defaults": {"unit": "percent"}}
+        }
+      ],
+      "time": {"from": "now-1h", "to": "now"},
+      "refresh": "30s",
+      "schemaVersion": 38
+    }
