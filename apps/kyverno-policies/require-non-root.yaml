@@ -1,0 +1,32 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: require-non-root
+  annotations:
+    policies.kyverno.io/title: Require Non-Root
+    policies.kyverno.io/description: Containers should not run as root user.
+spec:
+  validationFailureAction: Audit
+  background: true
+  rules:
+  - name: check-non-root
+    match:
+      any:
+      - resources:
+          kinds:
+          - Pod
+    exclude:
+      any:
+      - resources:
+          namespaces:
+          - kube-system
+          - monitoring
+          - longhorn-system
+          - ollama
+          - nvidia-device-plugin
+    validate:
+      message: "Running as root is not recommended. Set runAsNonRoot to true."
+      pattern:
+        spec:
+          =(securityContext):
+            =(runAsNonRoot): true

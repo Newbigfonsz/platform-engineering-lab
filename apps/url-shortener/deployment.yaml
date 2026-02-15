@@ -4,16 +4,6 @@ metadata:
   name: url-shortener
 ---
 apiVersion: v1
-kind: Secret
-metadata:
-  name: postgres-secret
-  namespace: url-shortener
-stringData:
-  POSTGRES_USER: shortener
-  POSTGRES_PASSWORD: shortener123
-  POSTGRES_DB: shortener
----
-apiVersion: v1
 kind: ConfigMap
 metadata:
   name: app-code
@@ -190,7 +180,10 @@ spec:
         - containerPort: 8000
         env:
         - name: DATABASE_URL
-          value: "postgresql://shortener:shortener123@postgres:5432/shortener"
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret
+              key: DATABASE_URL
         volumeMounts:
         - name: app-code
           mountPath: /app
@@ -228,9 +221,14 @@ metadata:
   name: url-shortener
   namespace: url-shortener
   annotations:
-    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    cert-manager.io/cluster-issuer: letsencrypt-prod
 spec:
   ingressClassName: nginx
+  tls:
+  - hosts:
+    - short.alphonzojonesjr.com
+    secretName: url-shortener-tls
   rules:
   - host: short.alphonzojonesjr.com
     http:

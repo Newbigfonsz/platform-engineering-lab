@@ -1,20 +1,23 @@
-<<<<<<< HEAD
-*.swp
-*.swo
-*~
-.DS_Store
-=======
 # Terraform
 .terraform/
 *.tfstate
 *.tfstate.*
 *.tfvars
 .terraform.lock.hcl
+terraform.tfvars
 
-# Secrets
+# Secrets (Kubernetes Secret manifests with real credentials)
 **/secrets.yaml
 **/secret.yaml
-*-secret.yaml
+
+# Allow ExternalSecret manifests (safe — just references, not actual secrets)
+!**/external-secret.yaml
+!**/external-secrets-config.yaml
+!apps/external-secrets/**
+
+# Keys and certs
+*.key
+*.pem
 
 # Backups
 backups/
@@ -25,14 +28,8 @@ backups/
 .DS_Store
 *.swp
 *.swo
+*~
 
 # IDE
 .idea/
 .vscode/
-terraform.tfvars
->>>>>>> 0398f75dc95ce9c136a96ea8e547ce18ab45a2e6
-# Secrets
-*-secret.yaml
-*secrets*.yaml
-*.key
-*.pem

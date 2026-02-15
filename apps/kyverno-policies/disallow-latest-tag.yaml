@@ -1,0 +1,30 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: disallow-latest-tag
+  annotations:
+    policies.kyverno.io/title: Disallow Latest Tag
+    policies.kyverno.io/description: Images must use a specific version tag, not ':latest'.
+spec:
+  validationFailureAction: Audit
+  background: true
+  rules:
+  - name: disallow-latest
+    match:
+      any:
+      - resources:
+          kinds:
+          - Pod
+    exclude:
+      any:
+      - resources:
+          namespaces:
+          - kube-system
+          - monitoring
+          - longhorn-system
+    validate:
+      message: "Using ':latest' image tag is not allowed. Specify a version tag."
+      pattern:
+        spec:
+          containers:
+          - image: "!*:latest | !*"

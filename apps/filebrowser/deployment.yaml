@@ -14,7 +14,9 @@ spec:
         app: filebrowser
     spec:
       securityContext:
-        runAsUser: 0
+        runAsUser: 1000
+        runAsNonRoot: true
+        fsGroup: 1000
       containers:
       - name: filebrowser
         image: hurlenko/filebrowser
