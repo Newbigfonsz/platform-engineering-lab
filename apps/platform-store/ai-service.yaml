@@ -15,7 +15,7 @@ data:
     from opentelemetry import trace
     from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
     from opentelemetry.sdk.trace import TracerProvider
-    from opentelemetry.sdk.trace.export import BatchSpanExporter
+    from opentelemetry.sdk.trace.export import BatchSpanProcessor
     from opentelemetry.sdk.resources import Resource
     from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 
@@ -25,7 +25,7 @@ data:
         endpoint=os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT", "otel-collector-opentelemetry-collector.monitoring.svc:4317"),
         insecure=True
     )
-    provider.add_span_processor(BatchSpanExporter(otlp_exporter))
+    provider.add_span_processor(BatchSpanProcessor(otlp_exporter))
     trace.set_tracer_provider(provider)
     tracer = trace.get_tracer(__name__)
 
@@ -99,14 +99,14 @@ data:
                 raise HTTPException(status_code=502, detail="AI service unavailable")
 
   requirements.txt: |
-    fastapi==0.104.1
-    uvicorn==0.24.0
-    httpx==0.25.2
-    pydantic==2.5.2
-    opentelemetry-api==1.21.0
-    opentelemetry-sdk==1.21.0
-    opentelemetry-exporter-otlp-proto-grpc==1.21.0
-    opentelemetry-instrumentation-fastapi==0.42b0
+    fastapi
+    uvicorn
+    httpx
+    pydantic
+    opentelemetry-api
+    opentelemetry-sdk
+    opentelemetry-exporter-otlp-proto-grpc
+    opentelemetry-instrumentation-fastapi
 ---
 apiVersion: apps/v1
 kind: Deployment
