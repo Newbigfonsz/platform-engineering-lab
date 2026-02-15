@@ -5,6 +5,8 @@ metadata:
   namespace: ollama
 spec:
   replicas: 1
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: ollama
@@ -18,6 +20,9 @@ spec:
       containers:
       - name: ollama
         image: ollama/ollama:latest
+        env:
+        - name: OLLAMA_KEEP_ALIVE
+          value: "24h"
         ports:
         - containerPort: 11434
         resources:
