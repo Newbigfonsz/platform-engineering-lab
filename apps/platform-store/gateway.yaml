@@ -1,0 +1,399 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: gateway-code
+  namespace: platform-store
+data:
+  server.js: |
+    const express = require('express');
+    const { createProxyMiddleware } = require('http-proxy-middleware');
+    const path = require('path');
+
+    const app = express();
+    const PORT = process.env.PORT || 3000;
+
+    // Proxy API requests to backend services
+    app.use('/api/products', createProxyMiddleware({
+      target: 'http://product-service',
+      changeOrigin: true,
+      pathRewrite: { '^/api/products': '/products' }
+    }));
+
+    app.use('/api/ai', createProxyMiddleware({
+      target: 'http://ai-service',
+      changeOrigin: true,
+      pathRewrite: { '^/api/ai': '' },
+      timeout: 65000
+    }));
+
+    // Health check
+    app.get('/health', (req, res) => res.json({ status: 'healthy', service: 'gateway', version: '1.0.0' }));
+
+    // Serve frontend
+    app.use(express.static('/app/public'));
+    app.get('*', (req, res) => res.sendFile('/app/public/index.html'));
+
+    app.listen(PORT, '0.0.0.0', () => console.log(`Gateway running on port ${PORT}`));
+
+  index.html: |
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PlatformStore - AI-Enhanced Product Catalog</title>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0a0a0a; color: #e0e0e0; min-height: 100vh; }
+      .header { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); padding: 20px 40px; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; }
+      .header h1 { font-size: 24px; color: #00d4ff; }
+      .header .badge { background: #0f3460; padding: 4px 12px; border-radius: 12px; font-size: 12px; color: #7ec8e3; }
+      .container { max-width: 1200px; margin: 0 auto; padding: 30px 20px; }
+      .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 30px; }
+      .stat-card { background: #1a1a2e; border: 1px solid #333; border-radius: 8px; padding: 20px; text-align: center; }
+      .stat-card .value { font-size: 28px; font-weight: bold; color: #00d4ff; }
+      .stat-card .label { font-size: 13px; color: #888; margin-top: 4px; }
+      .actions { display: flex; gap: 12px; margin-bottom: 24px; flex-wrap: wrap; }
+      .btn { padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 500; transition: all 0.2s; }
+      .btn-primary { background: #00d4ff; color: #000; }
+      .btn-primary:hover { background: #00b8d4; }
+      .btn-ai { background: #7c3aed; color: #fff; }
+      .btn-ai:hover { background: #6d28d9; }
+      .btn-danger { background: #dc2626; color: #fff; }
+      .btn-danger:hover { background: #b91c1c; }
+      .btn-sm { padding: 6px 12px; font-size: 12px; }
+      .products { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
+      .product-card { background: #1a1a2e; border: 1px solid #333; border-radius: 8px; padding: 20px; transition: border-color 0.2s; }
+      .product-card:hover { border-color: #00d4ff; }
+      .product-card h3 { color: #fff; margin-bottom: 4px; }
+      .product-card .category { color: #7ec8e3; font-size: 13px; margin-bottom: 8px; }
+      .product-card .price { font-size: 22px; font-weight: bold; color: #10b981; margin-bottom: 8px; }
+      .product-card .description { color: #aaa; font-size: 14px; line-height: 1.5; }
+      .product-card .card-actions { margin-top: 12px; display: flex; gap: 8px; }
+      .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 100; justify-content: center; align-items: center; }
+      .modal-overlay.active { display: flex; }
+      .modal { background: #1a1a2e; border: 1px solid #333; border-radius: 12px; padding: 30px; width: 90%; max-width: 500px; }
+      .modal h2 { margin-bottom: 20px; color: #00d4ff; }
+      .form-group { margin-bottom: 16px; }
+      .form-group label { display: block; margin-bottom: 6px; font-size: 13px; color: #aaa; }
+      .form-group input, .form-group select { width: 100%; padding: 10px; background: #0a0a0a; border: 1px solid #333; border-radius: 6px; color: #fff; font-size: 14px; }
+      .ai-result { background: #0f3460; border-radius: 8px; padding: 16px; margin-top: 12px; }
+      .ai-result .label { color: #7c3aed; font-size: 12px; font-weight: 600; margin-bottom: 6px; }
+      .loading { color: #7c3aed; font-style: italic; }
+      .toast { position: fixed; bottom: 20px; right: 20px; background: #10b981; color: #fff; padding: 12px 20px; border-radius: 8px; display: none; z-index: 200; }
+      .arch-section { background: #1a1a2e; border: 1px solid #333; border-radius: 8px; padding: 20px; margin-bottom: 24px; }
+      .arch-section h2 { color: #00d4ff; margin-bottom: 12px; font-size: 18px; }
+      .arch-diagram { font-family: monospace; color: #7ec8e3; font-size: 13px; line-height: 1.6; white-space: pre; overflow-x: auto; }
+    </style>
+    </head>
+    <body>
+    <div class="header">
+      <h1>PlatformStore</h1>
+      <div class="badge">AI-Enhanced Microservices Demo</div>
+    </div>
+    <div class="container">
+      <div class="arch-section">
+        <h2>Architecture</h2>
+        <div class="arch-diagram">Internet -> Ingress -> API Gateway (Argo Rollout, canary)
+                         |
+                +--------+--------+
+                |                 |
+         Product Service     AI Service
+         (FastAPI+Postgres)  (FastAPI+Ollama)
+                |                 |
+           PostgreSQL        Ollama GPU</div>
+      </div>
+      <div class="stats" id="stats">
+        <div class="stat-card"><div class="value" id="product-count">-</div><div class="label">Products</div></div>
+        <div class="stat-card"><div class="value" id="gateway-status">-</div><div class="label">Gateway</div></div>
+        <div class="stat-card"><div class="value" id="ai-status">-</div><div class="label">AI Service</div></div>
+      </div>
+      <div class="actions">
+        <button class="btn btn-primary" onclick="openModal()">+ Add Product</button>
+        <button class="btn btn-ai" onclick="loadProducts()">Refresh</button>
+      </div>
+      <div class="products" id="products"></div>
+    </div>
+
+    <div class="modal-overlay" id="modal">
+      <div class="modal">
+        <h2>New Product</h2>
+        <div class="form-group">
+          <label>Product Name</label>
+          <input type="text" id="prod-name" placeholder="e.g. Cloud Monitor Pro">
+        </div>
+        <div class="form-group">
+          <label>Category</label>
+          <select id="prod-category">
+            <option value="Software">Software</option>
+            <option value="Hardware">Hardware</option>
+            <option value="DevOps Tools">DevOps Tools</option>
+            <option value="AI/ML">AI/ML</option>
+            <option value="Security">Security</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Price ($)</label>
+          <input type="number" id="prod-price" placeholder="29.99" step="0.01">
+        </div>
+        <div id="ai-desc-area"></div>
+        <div style="display:flex; gap:12px; margin-top:20px;">
+          <button class="btn btn-ai" onclick="generateDescription()">Generate AI Description</button>
+          <button class="btn btn-primary" onclick="saveProduct()">Save</button>
+          <button class="btn btn-danger" onclick="closeModal()">Cancel</button>
+        </div>
+      </div>
+    </div>
+    <div class="toast" id="toast"></div>
+
+    <script>
+    let aiDescription = '';
+    async function loadProducts() {
+      try {
+        const res = await fetch('/api/products');
+        const products = await res.json();
+        document.getElementById('product-count').textContent = products.length;
+        const container = document.getElementById('products');
+        container.innerHTML = products.map(p => `
+          <div class="product-card">
+            <h3>${esc(p.name)}</h3>
+            <div class="category">${esc(p.category)}</div>
+            <div class="price">$${Number(p.price).toFixed(2)}</div>
+            ${p.description ? `<div class="description">${esc(p.description)}</div>` : ''}
+            <div class="card-actions">
+              <button class="btn btn-ai btn-sm" onclick="getRecommendations('${esc(p.name)}','${esc(p.category)}',this)">AI Recommend</button>
+              <button class="btn btn-danger btn-sm" onclick="deleteProduct(${p.id})">Delete</button>
+            </div>
+          </div>
+        `).join('');
+      } catch(e) { console.error(e); }
+    }
+    async function checkHealth() {
+      try {
+        const res = await fetch('/health');
+        const data = await res.json();
+        document.getElementById('gateway-status').textContent = data.version || 'OK';
+      } catch(e) { document.getElementById('gateway-status').textContent = 'Down'; }
+      try {
+        const res = await fetch('/api/ai/health');
+        document.getElementById('ai-status').textContent = 'Online';
+      } catch(e) { document.getElementById('ai-status').textContent = 'Offline'; }
+    }
+    function openModal() { aiDescription = ''; document.getElementById('ai-desc-area').innerHTML = ''; document.getElementById('modal').classList.add('active'); }
+    function closeModal() { document.getElementById('modal').classList.remove('active'); }
+    async function generateDescription() {
+      const name = document.getElementById('prod-name').value;
+      const category = document.getElementById('prod-category').value;
+      if (!name) return alert('Enter a product name first');
+      const area = document.getElementById('ai-desc-area');
+      area.innerHTML = '<div class="ai-result"><div class="loading">Generating AI description via Ollama GPU...</div></div>';
+      try {
+        const res = await fetch('/api/ai/generate-description', {
+          method: 'POST', headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({name, category})
+        });
+        const data = await res.json();
+        aiDescription = data.description;
+        area.innerHTML = `<div class="ai-result"><div class="label">AI Generated (${data.model})</div><div>${esc(data.description)}</div></div>`;
+      } catch(e) { area.innerHTML = '<div class="ai-result"><div class="label">Error</div>AI service unavailable</div>'; }
+    }
+    async function saveProduct() {
+      const name = document.getElementById('prod-name').value;
+      const category = document.getElementById('prod-category').value;
+      const price = parseFloat(document.getElementById('prod-price').value);
+      if (!name || !price) return alert('Fill in name and price');
+      await fetch('/api/products', {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({name, category, price, description: aiDescription || null})
+      });
+      closeModal(); loadProducts(); showToast('Product created!');
+    }
+    async function deleteProduct(id) {
+      await fetch(`/api/products/${id}`, {method:'DELETE'});
+      loadProducts(); showToast('Product deleted');
+    }
+    async function getRecommendations(name, category, btn) {
+      const card = btn.closest('.product-card');
+      let recDiv = card.querySelector('.rec-area');
+      if (recDiv) { recDiv.remove(); return; }
+      recDiv = document.createElement('div');
+      recDiv.className = 'rec-area ai-result';
+      recDiv.style.marginTop = '12px';
+      recDiv.innerHTML = '<div class="loading">Getting AI recommendations...</div>';
+      card.appendChild(recDiv);
+      try {
+        const res = await fetch('/api/ai/recommend', {
+          method: 'POST', headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({product_name: name, category})
+        });
+        const data = await res.json();
+        recDiv.innerHTML = `<div class="label">AI Recommendations (${data.model})</div><div style="white-space:pre-line">${esc(data.recommendations)}</div>`;
+      } catch(e) { recDiv.innerHTML = '<div class="label">Error</div>AI unavailable'; }
+    }
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg; t.style.display = 'block';
+      setTimeout(() => t.style.display = 'none', 3000);
+    }
+    function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+    loadProducts(); checkHealth(); setInterval(checkHealth, 30000);
+    </script>
+    </body>
+    </html>
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: gateway
+  namespace: platform-store
+  labels:
+    app: gateway
+spec:
+  replicas: 1
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels:
+      app: gateway
+  strategy:
+    canary:
+      canaryService: gateway-canary
+      stableService: gateway-stable
+      steps:
+      - setWeight: 20
+      - pause: {duration: 30s}
+      - setWeight: 40
+      - pause: {duration: 30s}
+      - setWeight: 60
+      - pause: {duration: 30s}
+      - setWeight: 80
+      - pause: {duration: 30s}
+      analysis:
+        templates:
+        - templateName: gateway-success-rate
+        startingStep: 1
+        args:
+        - name: service-name
+          value: gateway
+  template:
+    metadata:
+      labels:
+        app: gateway
+    spec:
+      initContainers:
+      - name: install-deps
+        image: node:18-slim
+        command: ['sh', '-c', 'cd /tmp && npm init -y && npm install express http-proxy-middleware && cp -r node_modules /app-deps/']
+        resources:
+          requests:
+            cpu: 50m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+        volumeMounts:
+        - name: app-deps
+          mountPath: /app-deps
+      containers:
+      - name: gateway
+        image: node:18-slim
+        command: ['sh', '-c', 'export NODE_PATH=/app-deps/node_modules:$NODE_PATH && node /app/server.js']
+        ports:
+        - containerPort: 3000
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 200m
+            memory: 256Mi
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 3000
+          initialDelaySeconds: 10
+          periodSeconds: 5
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 3000
+          initialDelaySeconds: 15
+          periodSeconds: 10
+        volumeMounts:
+        - name: app-code
+          mountPath: /app
+        - name: frontend
+          mountPath: /app/public
+        - name: app-deps
+          mountPath: /app-deps
+      volumes:
+      - name: app-code
+        configMap:
+          name: gateway-code
+          items:
+          - key: server.js
+            path: server.js
+      - name: frontend
+        configMap:
+          name: gateway-code
+          items:
+          - key: index.html
+            path: index.html
+      - name: app-deps
+        emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gateway-stable
+  namespace: platform-store
+spec:
+  selector:
+    app: gateway
+  ports:
+  - port: 80
+    targetPort: 3000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gateway-canary
+  namespace: platform-store
+spec:
+  selector:
+    app: gateway
+  ports:
+  - port: 80
+    targetPort: 3000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gateway
+  namespace: platform-store
+spec:
+  selector:
+    app: gateway
+  ports:
+  - port: 80
+    targetPort: 3000
+---
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata:
+  name: gateway-success-rate
+  namespace: platform-store
+spec:
+  args:
+  - name: service-name
+  metrics:
+  - name: success-rate
+    interval: 30s
+    failureLimit: 3
+    successCondition: result[0] >= 0.95 || result[0] == nil
+    provider:
+      prometheus:
+        address: http://monitoring-kube-prometheus-prometheus.monitoring.svc:9090
+        query: |
+          sum(rate(nginx_ingress_controller_requests{exported_service="{{args.service-name}}",status!~"5.."}[2m]))
+          /
+          sum(rate(nginx_ingress_controller_requests{exported_service="{{args.service-name}}"}[2m]))

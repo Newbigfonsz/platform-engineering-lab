@@ -1,0 +1,221 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: product-service-code
+  namespace: platform-store
+data:
+  app.py: |
+    from fastapi import FastAPI, HTTPException
+    from pydantic import BaseModel
+    from typing import Optional, List
+    import asyncpg
+    import os
+    import logging
+
+    from opentelemetry import trace
+    from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
+    from opentelemetry.sdk.trace import TracerProvider
+    from opentelemetry.sdk.trace.export import BatchSpanExporter
+    from opentelemetry.sdk.resources import Resource
+    from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+
+    resource = Resource.create({"service.name": "product-service", "service.namespace": "platform-store"})
+    provider = TracerProvider(resource=resource)
+    otlp_exporter = OTLPSpanExporter(
+        endpoint=os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT", "otel-collector-opentelemetry-collector.monitoring.svc:4317"),
+        insecure=True
+    )
+    provider.add_span_processor(BatchSpanExporter(otlp_exporter))
+    trace.set_tracer_provider(provider)
+    tracer = trace.get_tracer(__name__)
+
+    app = FastAPI(title="Product Service", version="1.0.0")
+    FastAPIInstrumentor.instrument_app(app)
+
+    DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://store:store@postgres:5432/storedb")
+    pool = None
+
+    class ProductCreate(BaseModel):
+        name: str
+        category: str
+        price: float
+        description: Optional[str] = None
+
+    class Product(BaseModel):
+        id: int
+        name: str
+        category: str
+        price: float
+        description: Optional[str] = None
+
+    @app.on_event("startup")
+    async def startup():
+        global pool
+        pool = await asyncpg.create_pool(DATABASE_URL, min_size=2, max_size=5)
+        async with pool.acquire() as conn:
+            await conn.execute('''
+                CREATE TABLE IF NOT EXISTS products (
+                    id SERIAL PRIMARY KEY,
+                    name VARCHAR(255) NOT NULL,
+                    category VARCHAR(100) NOT NULL,
+                    price NUMERIC(10,2) NOT NULL,
+                    description TEXT,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            ''')
+
+    @app.on_event("shutdown")
+    async def shutdown():
+        if pool:
+            await pool.close()
+
+    @app.get("/health")
+    async def health():
+        return {"status": "healthy", "service": "product-service"}
+
+    @app.get("/products", response_model=List[Product])
+    async def list_products():
+        with tracer.start_as_current_span("list-products"):
+            async with pool.acquire() as conn:
+                rows = await conn.fetch("SELECT id, name, category, price, description FROM products ORDER BY id DESC LIMIT 50")
+                return [dict(r) for r in rows]
+
+    @app.get("/products/{product_id}", response_model=Product)
+    async def get_product(product_id: int):
+        with tracer.start_as_current_span("get-product", attributes={"product.id": product_id}):
+            async with pool.acquire() as conn:
+                row = await conn.fetchrow("SELECT id, name, category, price, description FROM products WHERE id = $1", product_id)
+                if not row:
+                    raise HTTPException(status_code=404, detail="Product not found")
+                return dict(row)
+
+    @app.post("/products", response_model=Product, status_code=201)
+    async def create_product(product: ProductCreate):
+        with tracer.start_as_current_span("create-product", attributes={"product.name": product.name}):
+            async with pool.acquire() as conn:
+                row = await conn.fetchrow(
+                    "INSERT INTO products (name, category, price, description) VALUES ($1, $2, $3, $4) RETURNING id, name, category, price, description",
+                    product.name, product.category, product.price, product.description
+                )
+                return dict(row)
+
+    @app.put("/products/{product_id}", response_model=Product)
+    async def update_product(product_id: int, product: ProductCreate):
+        with tracer.start_as_current_span("update-product", attributes={"product.id": product_id}):
+            async with pool.acquire() as conn:
+                row = await conn.fetchrow(
+                    "UPDATE products SET name=$1, category=$2, price=$3, description=$4 WHERE id=$5 RETURNING id, name, category, price, description",
+                    product.name, product.category, product.price, product.description, product_id
+                )
+                if not row:
+                    raise HTTPException(status_code=404, detail="Product not found")
+                return dict(row)
+
+    @app.delete("/products/{product_id}")
+    async def delete_product(product_id: int):
+        with tracer.start_as_current_span("delete-product", attributes={"product.id": product_id}):
+            async with pool.acquire() as conn:
+                result = await conn.execute("DELETE FROM products WHERE id = $1", product_id)
+                if result == "DELETE 0":
+                    raise HTTPException(status_code=404, detail="Product not found")
+                return {"deleted": True}
+
+  requirements.txt: |
+    fastapi==0.104.1
+    uvicorn==0.24.0
+    asyncpg==0.29.0
+    pydantic==2.5.2
+    opentelemetry-api==1.21.0
+    opentelemetry-sdk==1.21.0
+    opentelemetry-exporter-otlp-proto-grpc==1.21.0
+    opentelemetry-instrumentation-fastapi==0.42b0
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: product-service
+  namespace: platform-store
+  labels:
+    app: product-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: product-service
+  template:
+    metadata:
+      labels:
+        app: product-service
+    spec:
+      initContainers:
+      - name: install-deps
+        image: python:3.11-slim
+        command: ['sh', '-c', 'pip install --target=/app-deps -r /app/requirements.txt']
+        resources:
+          requests:
+            cpu: 50m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+        volumeMounts:
+        - name: app-code
+          mountPath: /app
+        - name: app-deps
+          mountPath: /app-deps
+      containers:
+      - name: api
+        image: python:3.11-slim
+        command: ['sh', '-c', 'export PYTHONPATH=/app-deps:$PYTHONPATH && cd /app && python -m uvicorn app:app --host 0.0.0.0 --port 8000']
+        ports:
+        - containerPort: 8000
+        env:
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret
+              key: DATABASE_URL
+        - name: OTEL_EXPORTER_OTLP_ENDPOINT
+          value: "otel-collector-opentelemetry-collector.monitoring.svc:4317"
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 300m
+            memory: 256Mi
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 15
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 20
+          periodSeconds: 15
+        volumeMounts:
+        - name: app-code
+          mountPath: /app
+        - name: app-deps
+          mountPath: /app-deps
+      volumes:
+      - name: app-code
+        configMap:
+          name: product-service-code
+      - name: app-deps
+        emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: product-service
+  namespace: platform-store
+spec:
+  selector:
+    app: product-service
+  ports:
+  - port: 80
+    targetPort: 8000

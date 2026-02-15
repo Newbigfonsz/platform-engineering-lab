@@ -1,0 +1,196 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ai-service-code
+  namespace: platform-store
+data:
+  app.py: |
+    from fastapi import FastAPI, HTTPException
+    from pydantic import BaseModel
+    from typing import Optional
+    import httpx
+    import os
+    import logging
+
+    from opentelemetry import trace
+    from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
+    from opentelemetry.sdk.trace import TracerProvider
+    from opentelemetry.sdk.trace.export import BatchSpanExporter
+    from opentelemetry.sdk.resources import Resource
+    from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+
+    resource = Resource.create({"service.name": "ai-service", "service.namespace": "platform-store"})
+    provider = TracerProvider(resource=resource)
+    otlp_exporter = OTLPSpanExporter(
+        endpoint=os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT", "otel-collector-opentelemetry-collector.monitoring.svc:4317"),
+        insecure=True
+    )
+    provider.add_span_processor(BatchSpanExporter(otlp_exporter))
+    trace.set_tracer_provider(provider)
+    tracer = trace.get_tracer(__name__)
+
+    app = FastAPI(title="AI Service", version="1.0.0")
+    FastAPIInstrumentor.instrument_app(app)
+
+    OLLAMA_URL = os.getenv("OLLAMA_URL", "http://ollama.ollama.svc:11434")
+
+    class DescriptionRequest(BaseModel):
+        name: str
+        category: str
+
+    class DescriptionResponse(BaseModel):
+        description: str
+        model: str
+
+    class RecommendRequest(BaseModel):
+        product_name: str
+        category: str
+
+    class RecommendResponse(BaseModel):
+        recommendations: str
+        model: str
+
+    @app.get("/health")
+    async def health():
+        return {"status": "healthy", "service": "ai-service"}
+
+    @app.post("/generate-description", response_model=DescriptionResponse)
+    async def generate_description(req: DescriptionRequest):
+        with tracer.start_as_current_span("generate-description", attributes={"product.name": req.name, "product.category": req.category}):
+            prompt = f"Write a compelling 2-3 sentence product description for a {req.category} product called '{req.name}'. Be concise and professional."
+            try:
+                async with httpx.AsyncClient(timeout=60.0) as client:
+                    response = await client.post(
+                        f"{OLLAMA_URL}/api/generate",
+                        json={"model": "llama3.2:1b", "prompt": prompt, "stream": False}
+                    )
+                    response.raise_for_status()
+                    data = response.json()
+                    return DescriptionResponse(
+                        description=data.get("response", "").strip(),
+                        model=data.get("model", "unknown")
+                    )
+            except httpx.TimeoutException:
+                raise HTTPException(status_code=504, detail="AI model timed out")
+            except Exception as e:
+                logging.error(f"Ollama error: {e}")
+                raise HTTPException(status_code=502, detail="AI service unavailable")
+
+    @app.post("/recommend", response_model=RecommendResponse)
+    async def recommend(req: RecommendRequest):
+        with tracer.start_as_current_span("generate-recommendations", attributes={"product.name": req.product_name}):
+            prompt = f"Suggest 3 related products for someone interested in '{req.product_name}' in the '{req.category}' category. Return a short bulleted list."
+            try:
+                async with httpx.AsyncClient(timeout=60.0) as client:
+                    response = await client.post(
+                        f"{OLLAMA_URL}/api/generate",
+                        json={"model": "llama3.2:1b", "prompt": prompt, "stream": False}
+                    )
+                    response.raise_for_status()
+                    data = response.json()
+                    return RecommendResponse(
+                        recommendations=data.get("response", "").strip(),
+                        model=data.get("model", "unknown")
+                    )
+            except httpx.TimeoutException:
+                raise HTTPException(status_code=504, detail="AI model timed out")
+            except Exception as e:
+                logging.error(f"Ollama error: {e}")
+                raise HTTPException(status_code=502, detail="AI service unavailable")
+
+  requirements.txt: |
+    fastapi==0.104.1
+    uvicorn==0.24.0
+    httpx==0.25.2
+    pydantic==2.5.2
+    opentelemetry-api==1.21.0
+    opentelemetry-sdk==1.21.0
+    opentelemetry-exporter-otlp-proto-grpc==1.21.0
+    opentelemetry-instrumentation-fastapi==0.42b0
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ai-service
+  namespace: platform-store
+  labels:
+    app: ai-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ai-service
+  template:
+    metadata:
+      labels:
+        app: ai-service
+    spec:
+      initContainers:
+      - name: install-deps
+        image: python:3.11-slim
+        command: ['sh', '-c', 'pip install --target=/app-deps -r /app/requirements.txt']
+        resources:
+          requests:
+            cpu: 50m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+        volumeMounts:
+        - name: app-code
+          mountPath: /app
+        - name: app-deps
+          mountPath: /app-deps
+      containers:
+      - name: api
+        image: python:3.11-slim
+        command: ['sh', '-c', 'export PYTHONPATH=/app-deps:$PYTHONPATH && cd /app && python -m uvicorn app:app --host 0.0.0.0 --port 8000']
+        ports:
+        - containerPort: 8000
+        env:
+        - name: OLLAMA_URL
+          value: "http://ollama.ollama.svc:11434"
+        - name: OTEL_EXPORTER_OTLP_ENDPOINT
+          value: "otel-collector-opentelemetry-collector.monitoring.svc:4317"
+        resources:
+          requests:
+            cpu: 50m
+            memory: 64Mi
+          limits:
+            cpu: 200m
+            memory: 256Mi
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 15
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 20
+          periodSeconds: 15
+        volumeMounts:
+        - name: app-code
+          mountPath: /app
+        - name: app-deps
+          mountPath: /app-deps
+      volumes:
+      - name: app-code
+        configMap:
+          name: ai-service-code
+      - name: app-deps
+        emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ai-service
+  namespace: platform-store
+spec:
+  selector:
+    app: ai-service
+  ports:
+  - port: 80
+    targetPort: 8000
