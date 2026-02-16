@@ -1,0 +1,36 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: redirect-to-home
+  namespace: default
+  annotations:
+    nginx.ingress.kubernetes.io/permanent-redirect: "https://alphonzojonesjr.com"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - lab.alphonzojonesjr.com
+    - demo.alphonzojonesjr.com
+    secretName: redirect-tls
+  rules:
+  - host: lab.alphonzojonesjr.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: kubernetes
+            port:
+              number: 443
+  - host: demo.alphonzojonesjr.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: kubernetes
+            port:
+              number: 443
