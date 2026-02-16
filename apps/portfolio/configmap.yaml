@@ -669,11 +669,11 @@ data:
             <!-- Stats -->
             <div class="stats-grid">
                 <div class="stat-card">
-                    <div class="stat-value">17</div>
+                    <div class="stat-value">23</div>
                     <div class="stat-label">Live Services</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-value">174</div>
+                    <div class="stat-value">175</div>
                     <div class="stat-label">Running Pods</div>
                 </div>
                 <div class="stat-card">
@@ -897,7 +897,7 @@ data:
                         <span class="cluster-stat-label">Nodes Ready</span>
                     </div>
                     <div class="cluster-stat">
-                        <span class="cluster-stat-value">174</span>
+                        <span class="cluster-stat-value">175</span>
                         <span class="cluster-stat-label">Pods Running</span>
                     </div>
                     <div class="cluster-stat">
@@ -1517,7 +1517,7 @@ data:
                     <div class="stat-label">Nodes Ready</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-value">174</div>
+                    <div class="stat-value">175</div>
                     <div class="stat-label">Pods Running</div>
                 </div>
                 <div class="stat-card">
