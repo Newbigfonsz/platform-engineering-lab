@@ -673,7 +673,7 @@ data:
                     <div class="stat-label">Live Services</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-value">150+</div>
+                    <div class="stat-value">174</div>
                     <div class="stat-label">Running Pods</div>
                 </div>
                 <div class="stat-card">
@@ -897,15 +897,15 @@ data:
                         <span class="cluster-stat-label">Nodes Ready</span>
                     </div>
                     <div class="cluster-stat">
-                        <span class="cluster-stat-value">139</span>
+                        <span class="cluster-stat-value">174</span>
                         <span class="cluster-stat-label">Pods Running</span>
                     </div>
                     <div class="cluster-stat">
-                        <span class="cluster-stat-value">32</span>
+                        <span class="cluster-stat-value">36</span>
                         <span class="cluster-stat-label">Namespaces</span>
                     </div>
                     <div class="cluster-stat">
-                        <span class="cluster-stat-value">57</span>
+                        <span class="cluster-stat-value">71</span>
                         <span class="cluster-stat-label">Deployments</span>
                     </div>
                 </div>
@@ -962,7 +962,7 @@ data:
                             <span class="node-divider">•</span>
                             <span>15.4 GB</span>
                         </div>
-                        <div class="node-role">Worker • Bare Metal</div>
+                        <div class="node-role">Control Plane</div>
                     </div>
                 </div>
                 <a href="dashboard.html" class="dashboard-link">
@@ -1517,15 +1517,15 @@ data:
                     <div class="stat-label">Nodes Ready</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-value">150+</div>
+                    <div class="stat-value">174</div>
                     <div class="stat-label">Pods Running</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-value">32</div>
+                    <div class="stat-value">36</div>
                     <div class="stat-label">Namespaces</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-value">57</div>
+                    <div class="stat-value">71</div>
                     <div class="stat-label">Deployments</div>
                 </div>
             </div>
@@ -1638,10 +1638,10 @@ data:
                             <div class="spec-value">15.4 GB</div>
                         </div>
                     </div>
-                    <div class="node-role">Worker Node • Bare Metal</div>
+                    <div class="node-role control-plane">Control Plane</div>
                 </div>
             </div>
-    
+
             <!-- Deployments -->
             <div class="section-title">Deployments</div>
             <div class="deployments-container">

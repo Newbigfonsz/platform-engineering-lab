@@ -89,9 +89,10 @@ data:
     = cluster.pods.running;\n\n                const nodesRes = await fetch(`${API_BASE}/api/nodes`);\n
     \               const nodes = await nodesRes.json();\n                \n                const
     nodesGrid = document.getElementById('nodes-grid');\n                nodesGrid.innerHTML
-    = nodes.nodes.map(node => {\n                    const isBareMetalNode = ['k8s-worker03',
-    'k8s-worker04', 'k8s-worker05'].includes(node.name);\n                    const
-    nodeType = node.name.includes('cp') ? 'Control Plane' : (isBareMetalNode ? 'Worker
+    = nodes.nodes.map(node => {\n                    const isControlPlane = ['k8s-cp01',
+    'k8s-worker05'].includes(node.name);\n                    const isBareMetalNode = ['k8s-worker03',
+    'k8s-worker04'].includes(node.name);\n                    const
+    nodeType = isControlPlane ? 'Control Plane' : (isBareMetalNode ? 'Worker
     • Bare Metal' : 'Worker');\n                    return `\n                    <div
     class=\"node-card\">\n                        <h3><i class=\"fas fa-server\"></i>
     ${node.name}</h3>\n                        <div class=\"detail\">CPU: <span>${node.cpu}
