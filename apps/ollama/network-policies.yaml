@@ -68,6 +68,26 @@ spec:
     ports:
     - port: 11434
 ---
+# Allow chatbot to call Ollama
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-chatbot
+  namespace: ollama
+spec:
+  podSelector:
+    matchLabels:
+      app: ollama
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: chatbot
+    ports:
+    - port: 11434
+---
 # Allow monitoring/Prometheus scraping
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
