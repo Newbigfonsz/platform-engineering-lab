@@ -22,7 +22,7 @@ spec:
         image: ollama/ollama:latest
         env:
         - name: OLLAMA_KEEP_ALIVE
-          value: "24h"
+          value: "-1"
         ports:
         - containerPort: 11434
         resources:
