@@ -84,7 +84,9 @@ data:
     }
     function addMsg(t,type){
       const div=document.createElement("div");div.className="message "+type;
-      div.innerHTML='<div class="bubble">'+t.replace(/\\n/g,"<br>")+'</div>';
+      const bubble=document.createElement("div");bubble.className="bubble";
+      t.split("\\n").forEach((line,i)=>{if(i>0)bubble.appendChild(document.createElement("br"));bubble.appendChild(document.createTextNode(line));});
+      div.appendChild(bubble);
       document.getElementById("messages").appendChild(div);
     }
     </script></body></html>"""
@@ -114,7 +116,7 @@ metadata:
   name: chatbot
   namespace: chatbot
 spec:
-  replicas: 1
+  replicas: 4
   selector:
     matchLabels:
       app: chatbot
@@ -146,6 +148,18 @@ spec:
           mountPath: /app
         - name: app-deps
           mountPath: /app-deps
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 10
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 15
+          periodSeconds: 30
         resources:
           requests:
             memory: "64Mi"
@@ -177,8 +191,15 @@ kind: Ingress
 metadata:
   name: chatbot
   namespace: chatbot
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
 spec:
   ingressClassName: nginx
+  tls:
+  - hosts:
+    - chat.alphonzojonesjr.com
+    secretName: chatbot-tls
   rules:
   - host: chat.alphonzojonesjr.com
     http:
@@ -190,3 +211,32 @@ spec:
             name: chatbot
             port:
               number: 80
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-ingress
+  namespace: chatbot
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-ingress-nginx
+  namespace: chatbot
+spec:
+  podSelector:
+    matchLabels:
+      app: chatbot
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: ingress-nginx
+    ports:
+    - port: 8000
