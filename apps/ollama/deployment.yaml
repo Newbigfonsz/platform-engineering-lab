@@ -17,6 +17,7 @@ spec:
     spec:
       nodeSelector:
         nvidia.com/gpu: "true"
+      terminationGracePeriodSeconds: 120
       containers:
       - name: ollama
         image: ollama/ollama:latest
@@ -28,6 +29,22 @@ spec:
         resources:
           limits:
             nvidia.com/gpu: "1"
+        readinessProbe:
+          httpGet:
+            path: /api/tags
+            port: 11434
+          initialDelaySeconds: 10
+          periodSeconds: 15
+          timeoutSeconds: 5
+          failureThreshold: 3
+        livenessProbe:
+          httpGet:
+            path: /api/tags
+            port: 11434
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 5
         volumeMounts:
         - name: ollama-data
           mountPath: /root/.ollama

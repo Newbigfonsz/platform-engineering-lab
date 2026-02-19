@@ -96,7 +96,7 @@ data:
                 response = await client.post(
                     f"{OLLAMA_URL}/api/chat",
                     json={"model": MODEL, "messages": [{"role": "system", "content": SYSTEM_PROMPT}, {"role": "user", "content": message.message}], "stream": False},
-                    timeout=60.0
+                    timeout=180.0
                 )
                 if response.status_code == 200:
                     return ChatResponse(response=response.json()["message"]["content"])

@@ -1,0 +1,43 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: ollama-model-warmup
+  namespace: ollama
+spec:
+  schedule: "*/5 * * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 1
+      activeDeadlineSeconds: 120
+      template:
+        spec:
+          restartPolicy: Never
+          containers:
+          - name: warmup
+            image: curlimages/curl:latest
+            command:
+            - sh
+            - -c
+            - |
+              echo "Pinging Ollama model..."
+              STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+                --max-time 90 \
+                -X POST http://ollama.ollama.svc:11434/api/generate \
+                -H "Content-Type: application/json" \
+                -d '{"model":"llama3.2","prompt":"hi","stream":false,"options":{"num_predict":1}}')
+              if [ "$STATUS" = "200" ]; then
+                echo "Model is warm and responding."
+              else
+                echo "WARNING: Model returned status $STATUS"
+                exit 1
+              fi
+            resources:
+              requests:
+                memory: "32Mi"
+                cpu: "10m"
+              limits:
+                memory: "64Mi"
+                cpu: "50m"
