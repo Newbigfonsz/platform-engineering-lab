@@ -18,6 +18,15 @@ spec:
       nodeSelector:
         nvidia.com/gpu: "true"
       terminationGracePeriodSeconds: 120
+      initContainers:
+      - name: enable-gpu-persistence
+        image: nvidia/cuda:12.8.0-base-ubuntu24.04
+        command: ["nvidia-smi", "-pm", "1"]
+        securityContext:
+          privileged: true
+        resources:
+          limits:
+            nvidia.com/gpu: "1"
       containers:
       - name: ollama
         image: ollama/ollama:latest
