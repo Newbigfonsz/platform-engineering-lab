@@ -4,22 +4,36 @@ metadata:
   name: vanmenh
   namespace: vanmenh
   annotations:
-    nginx.ingress.kubernetes.io/ssl-redirect: "false"
     cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/limit-rps: "10"
+    nginx.ingress.kubernetes.io/limit-burst-multiplier: "5"
+    nginx.ingress.kubernetes.io/from-to-www-redirect: "true"
 spec:
   ingressClassName: nginx
   tls:
-  - hosts:
-    - vanmenh.alphonzojonesjr.com
-    secretName: vanmenh-tls
+    - hosts:
+        - vanmenhapp.com
+        - www.vanmenhapp.com
+      secretName: vanmenhapp-tls
   rules:
-  - host: vanmenh.alphonzojonesjr.com
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: vanmenh
-            port:
-              number: 80
+    - host: vanmenhapp.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: vanmenh
+                port:
+                  number: 80
+    - host: www.vanmenhapp.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: vanmenh
+                port:
+                  number: 80

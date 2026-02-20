@@ -13,53 +13,81 @@ spec:
       labels:
         app: vanmenh
     spec:
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    app: vanmenh
+                topologyKey: kubernetes.io/hostname
       containers:
-      - name: vanmenh
-        image: aljonesjr/vanmenh:latest
-        ports:
-        - containerPort: 3000
-        env:
-        - name: DATABASE_URL
-          valueFrom:
-            secretKeyRef:
-              name: vanmenh-secrets
-              key: database-url
-        - name: NEXTAUTH_URL
-          value: "https://vanmenh.alphonzojonesjr.com"
-        - name: NEXTAUTH_SECRET
-          valueFrom:
-            secretKeyRef:
-              name: vanmenh-secrets
-              key: nextauth-secret
-        - name: GOOGLE_CLIENT_ID
-          valueFrom:
-            secretKeyRef:
-              name: vanmenh-secrets
-              key: google-client-id
-        - name: GOOGLE_CLIENT_SECRET
-          valueFrom:
-            secretKeyRef:
-              name: vanmenh-secrets
-              key: google-client-secret
-        - name: STRIPE_SECRET_KEY
-          valueFrom:
-            secretKeyRef:
-              name: vanmenh-secrets
-              key: stripe-secret-key
-        - name: STRIPE_WEBHOOK_SECRET
-          valueFrom:
-            secretKeyRef:
-              name: vanmenh-secrets
-              key: stripe-webhook-secret
-        livenessProbe:
-          httpGet:
-            path: /health
-            port: 3000
-          initialDelaySeconds: 10
-          periodSeconds: 30
-        readinessProbe:
-          httpGet:
-            path: /health
-            port: 3000
-          initialDelaySeconds: 5
-          periodSeconds: 10
+        - name: vanmenh
+          image: aljonesjr/vanmenh:latest
+          ports:
+            - containerPort: 3000
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          env:
+            - name: HOSTNAME
+              value: "0.0.0.0"
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: vanmenh-secrets
+                  key: database-url
+            - name: NEXTAUTH_URL
+              value: "https://vanmenhapp.com"
+            - name: NEXTAUTH_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: vanmenh-secrets
+                  key: nextauth-secret
+            - name: GOOGLE_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: vanmenh-secrets
+                  key: google-client-id
+            - name: GOOGLE_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: vanmenh-secrets
+                  key: google-client-secret
+            - name: STRIPE_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: vanmenh-secrets
+                  key: stripe-secret-key
+            - name: STRIPE_WEBHOOK_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: vanmenh-secrets
+                  key: stripe-webhook-secret
+            - name: RESEND_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: vanmenh-secrets
+                  key: resend-api-key
+            - name: ANTHROPIC_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: vanmenh-secrets
+                  key: anthropic-api-key
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 3000
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 3000
+            initialDelaySeconds: 5
+            periodSeconds: 10
