@@ -16,7 +16,18 @@ spec:
         metadata:
           labels:
             app.kubernetes.io/name: postgres-backup
+          annotations:
+            vault.hashicorp.com/agent-inject: "true"
+            vault.hashicorp.com/agent-inject-secret-db-creds: "database/creds/taskapp-role"
+            vault.hashicorp.com/agent-inject-template-db-creds: |
+              {{- with secret "database/creds/taskapp-role" -}}
+              export DATABASE_USER="{{ .Data.username }}"
+              export DATABASE_PASSWORD="{{ .Data.password }}"
+              {{- end }}
+            vault.hashicorp.com/agent-inject-vault-addr: "http://vault.vault.svc.cluster.local:8200"
+            vault.hashicorp.com/role: "taskapp-role"
         spec:
+          serviceAccountName: default
           securityContext:
             runAsNonRoot: true
             runAsUser: 70
@@ -27,24 +38,9 @@ spec:
             - /bin/sh
             - -c
             - |
-              pg_dump -h postgres -U "$POSTGRES_USER" "$POSTGRES_DB" > /backup/taskapp-$(date +%Y%m%d).sql
+              . /vault/secrets/db-creds
+              PGPASSWORD="$DATABASE_PASSWORD" pg_dump -h postgres -U "$DATABASE_USER" taskappdb > /backup/taskapp-$(date +%Y%m%d).sql
               echo "Backup completed: $(wc -c < /backup/taskapp-$(date +%Y%m%d).sql) bytes"
-            env:
-            - name: PGPASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: postgres-secret
-                  key: POSTGRES_PASSWORD
-            - name: POSTGRES_USER
-              valueFrom:
-                secretKeyRef:
-                  name: postgres-secret
-                  key: POSTGRES_USER
-            - name: POSTGRES_DB
-              valueFrom:
-                secretKeyRef:
-                  name: postgres-secret
-                  key: POSTGRES_DB
             resources:
               requests:
                 cpu: 50m
