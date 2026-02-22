@@ -16,8 +16,8 @@ spec:
         app: ollama
     spec:
       terminationGracePeriodSeconds: 120
-      nodeSelector:
-        nvidia.com/gpu: "true"
+      # nodeSelector:
+      #   nvidia.com/gpu: "true"  # TODO: re-enable after GPU driver fix on worker05
       containers:
       - name: ollama
         image: ollama/ollama:latest
@@ -30,11 +30,11 @@ spec:
           requests:
             memory: "4Gi"
             cpu: "2"
-            nvidia.com/gpu: "1"
+            # nvidia.com/gpu: "1"  # TODO: re-enable after GPU driver fix on worker05
           limits:
             memory: "6Gi"
             cpu: "4"
-            nvidia.com/gpu: "1"
+            # nvidia.com/gpu: "1"  # TODO: re-enable after GPU driver fix on worker05
         readinessProbe:
           httpGet:
             path: /api/tags
