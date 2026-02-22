@@ -16,6 +16,8 @@ spec:
         app: ollama
     spec:
       terminationGracePeriodSeconds: 120
+      nodeSelector:
+        nvidia.com/gpu: "true"
       containers:
       - name: ollama
         image: ollama/ollama:latest
@@ -28,9 +30,11 @@ spec:
           requests:
             memory: "4Gi"
             cpu: "2"
+            nvidia.com/gpu: "1"
           limits:
             memory: "6Gi"
             cpu: "4"
+            nvidia.com/gpu: "1"
         readinessProbe:
           httpGet:
             path: /api/tags
