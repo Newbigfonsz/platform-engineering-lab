@@ -1,0 +1,44 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(kubectl get:*)",
+      "Bash(kubectl describe:*)",
+      "Bash(kubectl logs:*)",
+      "Bash(kubectl top:*)",
+      "Bash(kubectl events:*)",
+      "Bash(kubectl -n argocd get:*)",
+      "Bash(kubectl -n kube-system get:*)",
+      "Bash(kubectl -n kube-system exec etcd-*:*)",
+      "Bash(helm list:*)",
+      "Bash(helm show:*)",
+      "Bash(helm status:*)",
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git branch:*)",
+      "Bash(git -C /home/ubuntu/platform-engineering-lab:*)",
+      "Bash(python3 -c \"import yaml*:*)",
+      "Bash(kubectl get events:*)"
+    ],
+    "deny": [
+      "Bash(kubectl delete:*)",
+      "Bash(kubectl drain:*)",
+      "Bash(kubectl cordon:*)",
+      "Bash(helm uninstall:*)",
+      "Bash(helm delete:*)"
+    ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "file=\"$CLAUDE_FILE_PATH\"; if echo \"$file\" | grep -qE '\\.(yaml|yml)$'; then python3 -c \"import yaml, sys; yaml.safe_load(open(sys.argv[1]))\" \"$file\" 2>&1 && echo 'YAML valid' || echo 'YAML INVALID - please fix'; fi"
+          }
+        ]
+      }
+    ]
+  }
+}
