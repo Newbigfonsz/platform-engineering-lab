@@ -17,7 +17,6 @@
       "Bash(git log:*)",
       "Bash(git branch:*)",
       "Bash(git -C /home/ubuntu/platform-engineering-lab:*)",
-      "Bash(python3 -c \"import yaml*:*)",
       "Bash(kubectl get events:*)"
     ],
     "deny": [
@@ -29,13 +28,23 @@
     ]
   },
   "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/skill-activation.sh"
+          }
+        ]
+      }
+    ],
     "PostToolUse": [
       {
         "matcher": "Write|Edit",
         "hooks": [
           {
             "type": "command",
-            "command": "file=\"$CLAUDE_FILE_PATH\"; if echo \"$file\" | grep -qE '\\.(yaml|yml)$'; then python3 -c \"import yaml, sys; yaml.safe_load(open(sys.argv[1]))\" \"$file\" 2>&1 && echo 'YAML valid' || echo 'YAML INVALID - please fix'; fi"
+            "command": "file=$CLAUDE_FILE_PATH; if echo $file | grep -qE '\\.(yaml|yml)$'; then python3 -c 'import yaml, sys; yaml.safe_load(open(sys.argv[1]))' $file 2>&1 && echo 'YAML valid' || echo 'YAML INVALID - please fix'; fi"
           }
         ]
       }
