@@ -1,0 +1,48 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: postgres-backup
+  namespace: taskapp
+  labels:
+    app.kubernetes.io/name: postgres-backup
+spec:
+  schedule: "0 2 * * *"
+  concurrencyPolicy: Replace
+  failedJobsHistoryLimit: 3
+  successfulJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app.kubernetes.io/name: postgres-backup
+        spec:
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 70
+          containers:
+          - name: backup
+            image: postgres:15-alpine
+            command:
+            - /bin/sh
+            - -c
+            - |
+              pg_dump -h postgres -U taskapp taskappdb > /backup/taskapp-$(date +%Y%m%d).sql
+              echo "Backup completed: $(wc -c < /backup/taskapp-$(date +%Y%m%d).sql) bytes"
+            envFrom:
+            - secretRef:
+                name: postgres-secret
+            resources:
+              requests:
+                cpu: 50m
+                memory: 64Mi
+              limits:
+                cpu: 200m
+                memory: 256Mi
+            volumeMounts:
+            - name: backup
+              mountPath: /backup
+          restartPolicy: OnFailure
+          volumes:
+          - name: backup
+            emptyDir: {}
