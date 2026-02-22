@@ -98,6 +98,8 @@
 - Taskapp ArgoCD OutOfSync — immutable PVC storageClass field, harmless
 - worker01/worker02 have 31Gi root disks (cleaned to ~65% on 2026-02-22, monitor regularly)
 - Technitium PVC improved to ~64% (was ~90%, log cleanup working)
+- **Tesla P4 GPU is DEFECTIVE** — Xid 79 + PCIe RxErr under any compute load (tested 2026-02-19, report at docs/GPU-TEST-REPORT.md). DO NOT attempt GPU fixes — card needs physical replacement. Ollama pinned to worker03/04 (CPU-only). TODO comments in `apps/ollama/deployment.yaml` mark where to re-enable GPU
+- worker05 containerd uses NVIDIA runtime as default — if GPU is in crashed state, ALL containers on worker05 may fail to start. Reboot worker05 to recover idle state
 
 ## Resolved Issues (2026-02-22)
 - Tempo OOMKill: resources were at wrong Helm path + 1024MB ballast exceeded 512Mi limit → fixed
