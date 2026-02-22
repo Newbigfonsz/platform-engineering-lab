@@ -2,7 +2,7 @@
 
 ## Cluster Overview
 - **6-node K8s cluster** (v1.28.15) — 2 control planes (cp01, cp02), 4 workers (worker01-05)
-- **GPU node**: worker05 (Tesla P4)
+- **GPU node**: none (Tesla P4 removed from worker05 — defective)
 - **Domain**: *.alphonzojonesjr.com
 - **GitOps**: ArgoCD (24 apps — 22 Synced, 2 known OutOfSync), Argo Rollouts
 - **Monitoring**: Prometheus/Grafana, Loki, Tempo, OTel Collector
@@ -98,14 +98,14 @@
 - Taskapp ArgoCD OutOfSync — immutable PVC storageClass field, harmless
 - worker01/worker02 have 31Gi root disks (cleaned to ~65% on 2026-02-22, monitor regularly)
 - Technitium PVC improved to ~64% (was ~90%, log cleanup working)
-- **Tesla P4 GPU is DEFECTIVE** — Xid 79 + PCIe RxErr under any compute load (tested 2026-02-19, report at docs/GPU-TEST-REPORT.md). DO NOT attempt GPU fixes — card needs physical replacement. Ollama pinned to worker03/04 (CPU-only). TODO comments in `apps/ollama/deployment.yaml` mark where to re-enable GPU
-- worker05 containerd uses NVIDIA runtime as default — if GPU is in crashed state, ALL containers on worker05 may fail to start. Reboot worker05 to recover idle state
+- **Tesla P4 GPU removed from worker05** (2026-02-22) — card was defective (Xid 79 + PCIe RxErr, report at docs/GPU-TEST-REPORT.md). containerd switched to runc default runtime, GPU label removed. Ollama runs CPU-only on worker03/04. NVIDIA packages still installed on worker05 (cleanup optional)
 
 ## Resolved Issues (2026-02-22)
 - Tempo OOMKill: resources were at wrong Helm path + 1024MB ballast exceeded 512Mi limit → fixed
 - Taskapp backup CronJob: missing resource limits + wrong credentials (used ExternalSecret instead of Vault dynamic creds) → fixed with vault-agent injection
 - Ollama OutOfSync: `kubectl rollout restart` added annotation not in git → synced
 - etcd DB 129MB → defragged to 28MB
+- Tesla P4 GPU removal prep: containerd default runtime → runc, GPU label removed, Ollama pinned to worker03/04 CPU-only
 
 ## Code Conventions
 - Express.js with path-to-regexp v8+: use `/{*path}` not `*` for wildcard routes
