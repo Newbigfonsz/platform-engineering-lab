@@ -16,8 +16,18 @@ spec:
         app: ollama
     spec:
       terminationGracePeriodSeconds: 120
+      # TODO: re-enable GPU after fixing nvidia driver on worker05
       # nodeSelector:
-      #   nvidia.com/gpu: "true"  # TODO: re-enable after GPU driver fix on worker05
+      #   nvidia.com/gpu: "true"
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: kubernetes.io/hostname
+                operator: NotIn
+                values:
+                - k8s-worker05
       containers:
       - name: ollama
         image: ollama/ollama:latest
