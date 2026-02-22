@@ -27,11 +27,24 @@ spec:
             - /bin/sh
             - -c
             - |
-              pg_dump -h postgres -U taskapp taskappdb > /backup/taskapp-$(date +%Y%m%d).sql
+              pg_dump -h postgres -U "$POSTGRES_USER" "$POSTGRES_DB" > /backup/taskapp-$(date +%Y%m%d).sql
               echo "Backup completed: $(wc -c < /backup/taskapp-$(date +%Y%m%d).sql) bytes"
-            envFrom:
-            - secretRef:
-                name: postgres-secret
+            env:
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: POSTGRES_PASSWORD
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: POSTGRES_USER
+            - name: POSTGRES_DB
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: POSTGRES_DB
             resources:
               requests:
                 cpu: 50m
