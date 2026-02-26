@@ -1,13 +1,18 @@
+---
+# Default deny all ingress and egress
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: default-deny-ingress
+  name: default-deny-all
   namespace: taskapp
 spec:
   podSelector: {}
   policyTypes:
-  - Ingress
+    - Ingress
+    - Egress
+
 ---
+# Allow ingress-nginx to reach frontend on port 80
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
@@ -18,16 +23,18 @@ spec:
     matchLabels:
       app: taskapp-frontend
   policyTypes:
-  - Ingress
+    - Ingress
   ingress:
-  - from:
-    - namespaceSelector:
-        matchLabels:
-          kubernetes.io/metadata.name: ingress-nginx
-    ports:
-    - protocol: TCP
-      port: 80
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ingress-nginx
+      ports:
+        - protocol: TCP
+          port: 80
+
 ---
+# Allow frontend to reach backend on port 3000
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
@@ -38,16 +45,18 @@ spec:
     matchLabels:
       app: taskapp-backend
   policyTypes:
-  - Ingress
+    - Ingress
   ingress:
-  - from:
-    - podSelector:
-        matchLabels:
-          app: taskapp-frontend
-    ports:
-    - protocol: TCP
-      port: 3000
+    - from:
+        - podSelector:
+            matchLabels:
+              app: taskapp-frontend
+      ports:
+        - protocol: TCP
+          port: 3000
+
 ---
+# Allow backend to reach postgres on port 5432
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
@@ -58,16 +67,21 @@ spec:
     matchLabels:
       app: postgres
   policyTypes:
-  - Ingress
+    - Ingress
   ingress:
-  - from:
-    - podSelector:
-        matchLabels:
-          app: taskapp-backend
-    ports:
-    - protocol: TCP
-      port: 5432
+    - from:
+        - podSelector:
+            matchLabels:
+              app: taskapp-backend
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: postgres-backup
+      ports:
+        - protocol: TCP
+          port: 5432
+
 ---
+# Allow monitoring namespace to scrape metrics
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
@@ -76,9 +90,134 @@ metadata:
 spec:
   podSelector: {}
   policyTypes:
-  - Ingress
+    - Ingress
   ingress:
-  - from:
-    - namespaceSelector:
-        matchLabels:
-          kubernetes.io/metadata.name: monitoring
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: monitoring
+
+---
+# Allow vault-agent sidecar injection from vault namespace
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-vault-injection
+  namespace: taskapp
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: vault
+
+---
+# Allow DNS egress for all pods
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-dns-egress
+  namespace: taskapp
+spec:
+  podSelector: {}
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+
+---
+# Allow frontend egress to backend
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-frontend-egress
+  namespace: taskapp
+spec:
+  podSelector:
+    matchLabels:
+      app: taskapp-frontend
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              app: taskapp-backend
+      ports:
+        - protocol: TCP
+          port: 3000
+
+---
+# Allow backend egress to postgres (same-ns) and vault (cross-ns) and K8s API (vault-agent auth)
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-backend-egress
+  namespace: taskapp
+spec:
+  podSelector:
+    matchLabels:
+      app: taskapp-backend
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              app: postgres
+      ports:
+        - protocol: TCP
+          port: 5432
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: vault
+      ports:
+        - protocol: TCP
+          port: 8200
+    - ports:
+        - protocol: TCP
+          port: 443
+
+---
+# Allow postgres-backup egress to postgres and vault (vault-agent sidecar)
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-backup-egress
+  namespace: taskapp
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: postgres-backup
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              app: postgres
+      ports:
+        - protocol: TCP
+          port: 5432
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: vault
+      ports:
+        - protocol: TCP
+          port: 8200
+    - ports:
+        - protocol: TCP
+          port: 443
