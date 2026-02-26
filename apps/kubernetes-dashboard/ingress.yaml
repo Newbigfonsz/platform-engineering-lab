@@ -23,10 +23,15 @@ metadata:
   name: kubernetes-dashboard-ingress
   namespace: kubernetes-dashboard
   annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
     nginx.ingress.kubernetes.io/ssl-redirect: "false"
     nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
 spec:
   ingressClassName: nginx
+  tls:
+  - hosts:
+    - k8s.alphonzojonesjr.com
+    secretName: k8s-alphonzojonesjr-com-tls
   rules:
   - host: k8s.alphonzojonesjr.com
     http:

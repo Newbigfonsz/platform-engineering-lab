@@ -1,42 +1,33 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  annotations:
-    kubectl.kubernetes.io/last-applied-configuration: |
-      {"apiVersion":"networking.k8s.io/v1","kind":"Ingress","metadata":{"annotations":{"nginx.ingress.kubernetes.io/rewrite-target":"/$2"},"name":"dashboard-ingress","namespace":"dashboard"},"spec":{"ingressClassName":"nginx","rules":[{"host":"dash.alphonzojonesjr.com","http":{"paths":[{"backend":{"service":{"name":"resource-api","port":{"number":5000}}},"path":"/api(/|$)(.*)","pathType":"ImplementationSpecific"},{"backend":{"service":{"name":"dashboard","port":{"number":80}}},"path":"/","pathType":"Prefix"}]}}]}}
-    nginx.ingress.kubernetes.io/rewrite-target: /$2
-    nginx.ingress.kubernetes.io/ssl-redirect: "false"
-  creationTimestamp: "2026-01-05T20:03:17Z"
-  generation: 8
   name: dashboard-ingress
   namespace: dashboard
-  resourceVersion: "9285837"
-  uid: 92f76274-20ce-461f-a645-01a225da905e
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
 spec:
   ingressClassName: nginx
-  rules:
-  - host: dash.alphonzojonesjr.com
-    http:
-      paths:
-      - backend:
-          service:
-            name: resource-api
-            port:
-              number: 5000
-        path: /api(/|$)(.*)
-        pathType: ImplementationSpecific
-      - backend:
-          service:
-            name: dashboard
-            port:
-              number: 80
-        path: /
-        pathType: Prefix
   tls:
   - hosts:
     - dash.alphonzojonesjr.com
     secretName: dash-alphonzojonesjr-com-tls
-status:
-  loadBalancer:
-    ingress:
-    - ip: 10.10.0.115
+  rules:
+  - host: dash.alphonzojonesjr.com
+    http:
+      paths:
+      - path: /api(/|$)(.*)
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: resource-api
+            port:
+              number: 5000
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: dashboard
+            port:
+              number: 80

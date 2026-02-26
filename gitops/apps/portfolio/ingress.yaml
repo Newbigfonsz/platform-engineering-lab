@@ -1,55 +1,47 @@
-apiVersion: v1
-items:
-- apiVersion: networking.k8s.io/v1
-  kind: Ingress
-  metadata:
-    annotations:
-      kubectl.kubernetes.io/last-applied-configuration: |
-        {"apiVersion":"networking.k8s.io/v1","kind":"Ingress","metadata":{"annotations":{"nginx.ingress.kubernetes.io/ssl-redirect":"false"},"name":"portfolio-ingress","namespace":"portfolio"},"spec":{"ingressClassName":"nginx","rules":[{"host":"alphonzojonesjr.com","http":{"paths":[{"backend":{"service":{"name":"portfolio","port":{"number":80}}},"path":"/","pathType":"Prefix"}]}},{"host":"www.alphonzojonesjr.com","http":{"paths":[{"backend":{"service":{"name":"portfolio","port":{"number":80}}},"path":"/","pathType":"Prefix"}]}}]}}
-      nginx.ingress.kubernetes.io/ssl-redirect: "false"
-    creationTimestamp: "2025-12-26T03:30:14Z"
-    generation: 3
-    name: portfolio-ingress
-    namespace: portfolio
-    resourceVersion: "5695582"
-    uid: 6c89d442-3005-4dab-b55d-3c85fba3355d
-  spec:
-    ingressClassName: nginx
-    rules:
-    - host: web.alphonzojonesjr.com
-      http:
-        paths:
-        - backend:
-            service:
-              name: portfolio
-              port:
-                number: 80
-          path: /
-          pathType: Prefix
-    - host: www.alphonzojonesjr.com
-      http:
-        paths:
-        - backend:
-            service:
-              name: portfolio
-              port:
-                number: 80
-          path: /
-          pathType: Prefix
-    - host: alphonzojonesjr.com
-      http:
-        paths:
-        - backend:
-            service:
-              name: portfolio
-              port:
-                number: 80
-          path: /
-          pathType: Prefix
-  status:
-    loadBalancer:
-      ingress:
-      - ip: 10.10.0.104
-kind: List
+apiVersion: networking.k8s.io/v1
+kind: Ingress
 metadata:
-  resourceVersion: ""
+  name: portfolio-ingress
+  namespace: portfolio
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - alphonzojonesjr.com
+    - www.alphonzojonesjr.com
+    - web.alphonzojonesjr.com
+    secretName: alphonzojonesjr-com-tls
+  rules:
+  - host: web.alphonzojonesjr.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: portfolio
+            port:
+              number: 80
+  - host: www.alphonzojonesjr.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: portfolio
+            port:
+              number: 80
+  - host: alphonzojonesjr.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: portfolio
+            port:
+              number: 80

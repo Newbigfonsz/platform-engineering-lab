@@ -1,8 +1,8 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: cluster-health-api
-  namespace: cluster-api
+  name: cluster-dashboard
+  namespace: cluster-dashboard
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt-prod
     nginx.ingress.kubernetes.io/ssl-redirect: "false"
@@ -10,16 +10,16 @@ spec:
   ingressClassName: nginx
   tls:
   - hosts:
-    - api.alphonzojonesjr.com
-    secretName: api-alphonzojonesjr-com-tls
+    - health.alphonzojonesjr.com
+    secretName: health-alphonzojonesjr-com-tls
   rules:
-  - host: api.alphonzojonesjr.com
+  - host: health.alphonzojonesjr.com
     http:
       paths:
       - path: /
         pathType: Prefix
         backend:
           service:
-            name: cluster-health-api
+            name: cluster-dashboard
             port:
               number: 80

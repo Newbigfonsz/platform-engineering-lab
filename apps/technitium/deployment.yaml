@@ -94,9 +94,14 @@ metadata:
   name: technitium-ingress
   namespace: technitium
   annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
     nginx.ingress.kubernetes.io/ssl-redirect: "false"
 spec:
   ingressClassName: nginx
+  tls:
+  - hosts:
+    - dns.alphonzojonesjr.com
+    secretName: dns-alphonzojonesjr-com-tls
   rules:
   - host: dns.alphonzojonesjr.com
     http:
