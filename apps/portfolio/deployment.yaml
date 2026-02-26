@@ -51,9 +51,16 @@ metadata:
   name: portfolio-ingress
   namespace: portfolio
   annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
     nginx.ingress.kubernetes.io/ssl-redirect: "false"
 spec:
   ingressClassName: nginx
+  tls:
+  - hosts:
+    - alphonzojonesjr.com
+    - www.alphonzojonesjr.com
+    - web.alphonzojonesjr.com
+    secretName: alphonzojonesjr-com-tls
   rules:
   - host: alphonzojonesjr.com
     http:
