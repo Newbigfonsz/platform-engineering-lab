@@ -147,6 +147,9 @@ spec:
           port: 8200
         - protocol: TCP
           port: 8201
+    # HTTPS + K8s API server (Calico evaluates post-DNAT, so port 6443 is needed for TokenReview)
     - ports:
         - protocol: TCP
           port: 443
+        - protocol: TCP
+          port: 6443
