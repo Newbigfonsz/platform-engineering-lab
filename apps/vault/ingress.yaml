@@ -8,6 +8,10 @@ metadata:
     nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
 spec:
   ingressClassName: nginx
+  tls:
+  - hosts:
+    - vault.alphonzojonesjr.com
+    secretName: vault-alphonzojonesjr-com-tls
   rules:
   - host: vault.alphonzojonesjr.com
     http:
