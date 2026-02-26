@@ -1,0 +1,58 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: pg-backup
+  namespace: vanmenh
+spec:
+  schedule: "0 3 * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app: pg-backup
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: pg-backup
+              image: postgres:16-alpine
+              resources:
+                requests:
+                  cpu: 50m
+                  memory: 128Mi
+                limits:
+                  cpu: 200m
+                  memory: 256Mi
+              env:
+                - name: PGPASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: vanmenh-secrets
+                      key: postgres-password
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  BACKUP_FILE="/backups/vanmenh-$(date +%Y-%m-%d).sql.gz"
+                  echo "Starting backup to $BACKUP_FILE"
+                  pg_dump -h vanmenh-pg -U postgres -d vanmenh | gzip > "$BACKUP_FILE"
+                  if [ $? -eq 0 ]; then
+                    echo "Backup completed successfully"
+                    # Keep only last 7 days of backups
+                    find /backups -name "vanmenh-*.sql.gz" -mtime +7 -delete
+                    echo "Cleanup complete. Current backups:"
+                    ls -lh /backups/
+                  else
+                    echo "Backup FAILED"
+                    exit 1
+                  fi
+              volumeMounts:
+                - name: backup-storage
+                  mountPath: /backups
+          volumes:
+            - name: backup-storage
+              persistentVolumeClaim:
+                claimName: pg-backups
