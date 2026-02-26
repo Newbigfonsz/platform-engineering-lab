@@ -11,6 +11,25 @@ spec:
     targetRevision: 55.5.0
     helm:
       values: |
+        prometheus:
+          prometheusSpec:
+            resources:
+              requests:
+                cpu: 200m
+                memory: 512Mi
+              limits:
+                cpu: "1"
+                memory: 2Gi
+            containers:
+              - name: prometheus
+                startupProbe:
+                  httpGet:
+                    path: /-/ready
+                    port: http-web
+                    scheme: HTTP
+                  failureThreshold: 300
+                  periodSeconds: 5
+                  timeoutSeconds: 3
         grafana:
           adminPassword: ${GRAFANA_ADMIN_PASSWORD}
           ingress:
