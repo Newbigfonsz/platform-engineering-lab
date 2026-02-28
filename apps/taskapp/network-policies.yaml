@@ -76,6 +76,9 @@ spec:
         - podSelector:
             matchLabels:
               app.kubernetes.io/name: postgres-backup
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: vault
       ports:
         - protocol: TCP
           port: 5432
