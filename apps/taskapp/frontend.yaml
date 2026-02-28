@@ -47,6 +47,24 @@ spec:
         - name: nginx-config
           mountPath: /etc/nginx/conf.d
       initContainers:
+      - name: wait-for-backend
+        image: busybox:1.36
+        command: ["sh", "-c"]
+        args:
+          - |
+            echo "Waiting for taskapp-backend service..."
+            until nslookup taskapp-backend.taskapp.svc.cluster.local; do
+              echo "Backend service not ready, waiting..."
+              sleep 5
+            done
+            echo "Backend service is ready!"
+        resources:
+          requests:
+            cpu: 10m
+            memory: 16Mi
+          limits:
+            cpu: 50m
+            memory: 32Mi
       - name: setup
         image: node:18-alpine
         command: ["/bin/sh", "-c"]
@@ -296,6 +314,13 @@ spec:
             </body>
             </html>
             ENDHTML
+        resources:
+          requests:
+            cpu: 50m
+            memory: 64Mi
+          limits:
+            cpu: 200m
+            memory: 256Mi
         volumeMounts:
         - name: html
           mountPath: /html
