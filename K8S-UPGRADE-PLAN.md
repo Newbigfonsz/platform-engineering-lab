@@ -57,12 +57,12 @@ The initial audit flagged cert-manager, Kyverno, and Vault as incompatible. On c
 
 | Risk | Component | Replicas | failurePolicy | Impact if down |
 |------|-----------|----------|---------------|----------------|
-| **CRITICAL** | ingress-nginx-controller | **1** | — | ALL external traffic drops |
-| **CRITICAL** | kyverno-admission-controller | **1** | **Fail** | ALL pod create/update blocked cluster-wide |
-| **HIGH** | cert-manager-webhook | **1** | **Fail** | Blocks cert issuance + annotated resources |
+| ~~CRITICAL~~ | ingress-nginx-controller | **2** (worker01, worker02) | — | **MITIGATED** |
+| ~~CRITICAL~~ | kyverno-admission-controller | **2** (cp01, worker05) | **Fail** | **MITIGATED** |
+| ~~HIGH~~ | cert-manager-webhook | **2** (worker04, worker05) | **Fail** | **MITIGATED** |
 | **HIGH** | kyverno-cleanup-controller | **1** | **Fail** | Blocks cleanup operations |
-| **MEDIUM** | PDBs with maxUnavailable=0 | ArgoCD, Vault, Grafana, Prometheus, etc. | — | `kubectl drain` hangs waiting for eviction |
-| **BLOCKER** | SSH access | 1 of 6 nodes | — | Cannot run apt on worker01-04 |
+| **MEDIUM** | PDBs with maxUnavailable=0 | ArgoCD, Vault, Grafana, Prometheus, etc. | — | `kubectl drain` hangs — see drain map below |
+| ~~BLOCKER~~ | SSH access | nsenter pods tested | — | **MITIGATED** |
 
 **Kyverno policies (low risk during upgrade):**
 - `disallow-privileged` — **Enforce** (only enforcing policy)
@@ -86,7 +86,106 @@ The initial audit flagged cert-manager, Kyverno, and Vault as incompatible. On c
 - [x] MetalLB AddressPool migrated to IPAddressPool — already done, AddressPool is empty
 - [x] Node access solved — nsenter pod template tested and working (with resource limits for ResourceQuota)
 - [x] v1.29 apt repo configured on ALL 6 nodes (signed-by path standardized to .gpg)
-- [ ] Drain strategy planned (review PDB section below)
+- [x] Drain strategy mapped (see per-node drain map below)
+
+### 6. Per-Node Drain Map (as of 2026-02-28)
+
+**Upgrade order:** cp01 → worker05 → worker02 → worker03 → worker04 → worker01
+
+#### cp01 (control plane — `kubeadm upgrade apply`, NO drain needed)
+Control plane upgrade does NOT drain the node. Pods stay running.
+- kyverno-admission-controller (2nd replica) — other replica on worker05 covers it
+- loki-0 — emptyDir, no PDB, will restart fine
+- Longhorn instance-manager — PDB minAvailable=1, but Longhorn manages this
+- **Action:** No PDB relaxation needed. Just run `kubeadm upgrade apply`.
+
+#### worker05 (control plane — `kubeadm upgrade node`, NO drain needed)
+- kyverno-admission-controller (1st replica) — other replica on cp01 covers it
+- cert-manager (2nd replica) — other replica on worker04
+- alertmanager — PDB maxUnavailable=0 **→ relax if draining**
+- prometheus — PDB maxUnavailable=0 **→ relax if draining**
+- Longhorn instance-manager
+- **Action:** No drain needed for control plane upgrade. If drain IS needed:
+  ```bash
+  kubectl -n monitoring patch pdb alertmanager-pdb --type merge -p '{"spec":{"maxUnavailable":1}}'
+  kubectl -n monitoring patch pdb prometheus-pdb --type merge -p '{"spec":{"maxUnavailable":1}}'
+  ```
+
+#### worker02 (first worker to drain)
+- argocd-repo-server — PDB maxUnavailable=0 **→ MUST relax**
+- ingress-nginx-controller (1 of 2) — PDB maxUnavailable=1, OK
+- Longhorn instance-manager
+- **Action before drain:**
+  ```bash
+  kubectl -n argocd patch pdb argocd-repo-server-pdb --type merge -p '{"spec":{"maxUnavailable":1}}'
+  kubectl drain k8s-worker02 --ignore-daemonsets --delete-emptydir-data --timeout=120s
+  ```
+- **After uncordon, restore:**
+  ```bash
+  kubectl -n argocd patch pdb argocd-repo-server-pdb --type merge -p '{"spec":{"maxUnavailable":0}}'
+  ```
+
+#### worker03
+- external-secrets — PDB maxUnavailable=0 **→ MUST relax**
+- platform-store postgres — PDB maxUnavailable=0 **→ MUST relax**
+- platform-store product-service — PDB maxUnavailable=0 **→ MUST relax**
+- taskapp postgres — PDB minAvailable=1 **→ MUST relax (only 1 replica)**
+- Longhorn instance-manager
+- **Action before drain:**
+  ```bash
+  kubectl -n external-secrets patch pdb external-secrets-pdb --type merge -p '{"spec":{"maxUnavailable":1}}'
+  kubectl -n platform-store patch pdb postgres-pdb --type merge -p '{"spec":{"maxUnavailable":1}}'
+  kubectl -n platform-store patch pdb product-service-pdb --type merge -p '{"spec":{"maxUnavailable":1}}'
+  kubectl -n taskapp patch pdb postgres-pdb --type merge -p '{"spec":{"minAvailable":0}}'
+  kubectl drain k8s-worker03 --ignore-daemonsets --delete-emptydir-data --timeout=120s
+  ```
+- **After uncordon, restore:**
+  ```bash
+  kubectl -n external-secrets patch pdb external-secrets-pdb --type merge -p '{"spec":{"maxUnavailable":0}}'
+  kubectl -n platform-store patch pdb postgres-pdb --type merge -p '{"spec":{"maxUnavailable":0}}'
+  kubectl -n platform-store patch pdb product-service-pdb --type merge -p '{"spec":{"maxUnavailable":0}}'
+  kubectl -n taskapp patch pdb postgres-pdb --type merge -p '{"spec":{"minAvailable":1}}'
+  ```
+
+#### worker04
+- argocd-server — PDB maxUnavailable=0 **→ MUST relax**
+- cert-manager (1st replica) — PDB maxUnavailable=0 **→ MUST relax**
+- platform-store gateway — PDB maxUnavailable=0 **→ MUST relax**
+- vault-1 — PDB maxUnavailable=0 **→ MUST relax**
+- Longhorn instance-manager
+- **Action before drain:**
+  ```bash
+  kubectl -n argocd patch pdb argocd-server-pdb --type merge -p '{"spec":{"maxUnavailable":1}}'
+  kubectl -n cert-manager patch pdb cert-manager-pdb --type merge -p '{"spec":{"maxUnavailable":1}}'
+  kubectl -n platform-store patch pdb gateway-pdb --type merge -p '{"spec":{"maxUnavailable":1}}'
+  kubectl -n vault patch pdb vault --type merge -p '{"spec":{"maxUnavailable":1}}'
+  kubectl drain k8s-worker04 --ignore-daemonsets --delete-emptydir-data --timeout=120s
+  ```
+- **After uncordon, restore:**
+  ```bash
+  kubectl -n argocd patch pdb argocd-server-pdb --type merge -p '{"spec":{"maxUnavailable":0}}'
+  kubectl -n cert-manager patch pdb cert-manager-pdb --type merge -p '{"spec":{"maxUnavailable":0}}'
+  kubectl -n platform-store patch pdb gateway-pdb --type merge -p '{"spec":{"maxUnavailable":0}}'
+  kubectl -n vault patch pdb vault --type merge -p '{"spec":{"maxUnavailable":0}}'
+  ```
+
+#### worker01 (LAST — has etcd member)
+- grafana — PDB maxUnavailable=0 **→ MUST relax**
+- vault-0 (ACTIVE leader) — PDB maxUnavailable=0 **→ MUST relax**
+- ingress-nginx-controller (1 of 2) — PDB maxUnavailable=1, OK
+- Longhorn instance-manager
+- **Action before drain:**
+  ```bash
+  kubectl -n monitoring patch pdb grafana-pdb --type merge -p '{"spec":{"maxUnavailable":1}}'
+  kubectl -n vault patch pdb vault --type merge -p '{"spec":{"maxUnavailable":1}}'
+  kubectl drain k8s-worker01 --ignore-daemonsets --delete-emptydir-data --timeout=120s
+  ```
+- **After uncordon, restore:**
+  ```bash
+  kubectl -n monitoring patch pdb grafana-pdb --type merge -p '{"spec":{"maxUnavailable":0}}'
+  kubectl -n vault patch pdb vault --type merge -p '{"spec":{"maxUnavailable":0}}'
+  ```
+- **Note:** worker01 has an etcd member added manually (not kubeadm-managed). After `kubeadm upgrade node`, verify etcd is healthy. May need manual etcd binary update.
 - [x] kube-vip manifests backed up to `backups/kube-vip/` (cp01 + worker05)
 - [x] Technitium DNS moved off cp01 to Longhorn (no local-storage PV blocking drain)
 
