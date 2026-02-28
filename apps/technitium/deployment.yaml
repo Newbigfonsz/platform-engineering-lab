@@ -15,8 +15,6 @@ spec:
       labels:
         app: technitium
     spec:
-      nodeSelector:
-        kubernetes.io/hostname: k8s-cp01
       containers:
       - name: technitium
         image: technitium/dns-server:latest
@@ -48,7 +46,7 @@ spec:
       volumes:
       - name: config
         persistentVolumeClaim:
-          claimName: technitium-pvc
+          claimName: technitium-data
 ---
 apiVersion: v1
 kind: Service
@@ -117,12 +115,12 @@ spec:
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: technitium-pvc
+  name: technitium-data
   namespace: technitium
 spec:
   accessModes:
   - ReadWriteOnce
-  storageClassName: local-storage
+  storageClassName: longhorn
   resources:
     requests:
-      storage: 50Gi
+      storage: 5Gi
