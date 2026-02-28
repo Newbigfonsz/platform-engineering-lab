@@ -84,7 +84,8 @@ The initial audit flagged cert-manager, Kyverno, and Vault as incompatible. On c
 - [ ] All nodes Ready, all pods healthy
 - [ ] No firing alerts (except Watchdog)
 - [x] MetalLB AddressPool migrated to IPAddressPool — already done, AddressPool is empty
-- [ ] Node access solved for worker01-04 (SSH keys or scripted nsenter pods)
+- [x] Node access solved — nsenter pod template tested and working (with resource limits for ResourceQuota)
+- [x] v1.29 apt repo configured on ALL 6 nodes (signed-by path standardized to .gpg)
 - [ ] Drain strategy planned (review PDB section below)
 - [x] kube-vip manifests backed up to `backups/kube-vip/` (cp01 + worker05)
 - [x] Technitium DNS moved off cp01 to Longhorn (no local-storage PV blocking drain)
