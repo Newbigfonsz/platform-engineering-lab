@@ -74,14 +74,20 @@ The initial audit flagged cert-manager, Kyverno, and Vault as incompatible. On c
 
 ### 5. Pre-Requisites
 
-- [ ] **Phase 0 hardening completed** (see below)
+- [x] **Phase 0 hardening completed** (2026-02-28)
+  - [x] ingress-nginx scaled to 2 replicas (worker01, worker02)
+  - [x] kyverno-admission-controller scaled to 2 replicas (cp01, worker05)
+  - [x] cert-manager + webhook scaled to 2 replicas (worker04, worker05)
+  - [x] All scaled pods verified on different nodes
 - [ ] etcd snapshot taken (CronJob runs every 6h, or trigger manually)
 - [ ] Velero backup verified
 - [ ] All nodes Ready, all pods healthy
 - [ ] No firing alerts (except Watchdog)
-- [ ] MetalLB AddressPool migrated to IPAddressPool
+- [x] MetalLB AddressPool migrated to IPAddressPool — already done, AddressPool is empty
 - [ ] Node access solved for worker01-04 (SSH keys or scripted nsenter pods)
 - [ ] Drain strategy planned (review PDB section below)
+- [x] kube-vip manifests backed up to `backups/kube-vip/` (cp01 + worker05)
+- [x] Technitium DNS moved off cp01 to Longhorn (no local-storage PV blocking drain)
 
 ## Upgrade Procedure
 
@@ -327,7 +333,9 @@ SSH only works to worker05 (`bigfonsz@10.10.0.115`). For worker01-04, use a priv
 
 ```bash
 # Template: run apt upgrade on a worker node
+# NOTE: Resource limits required — namespaces have ResourceQuotas
 NODE=k8s-worker0X
+VERSION=1.29.15-1.1
 kubectl run "upgrade-${NODE}" --image=ubuntu:22.04 --restart=Never --overrides='{
   "spec": {
     "nodeName": "'${NODE}'",
@@ -335,9 +343,10 @@ kubectl run "upgrade-${NODE}" --image=ubuntu:22.04 --restart=Never --overrides='
     "containers": [{
       "name": "nsenter",
       "image": "ubuntu:22.04",
-      "command": ["nsenter", "--target", "1", "--mount", "--", "/bin/bash", "-c",
-        "apt-mark unhold kubeadm && apt-get install -y kubeadm=1.29.15-1.1 && apt-mark hold kubeadm && kubeadm upgrade node && apt-mark unhold kubelet kubectl && apt-get install -y kubelet=1.29.15-1.1 kubectl=1.29.15-1.1 && apt-mark hold kubelet kubectl && systemctl daemon-reload && systemctl restart kubelet"],
-      "securityContext": {"privileged": true}
+      "command": ["nsenter", "--target", "1", "--mount", "--uts", "--ipc", "--net", "--", "/bin/bash", "-c",
+        "set -e; apt-mark unhold kubeadm && apt-get install -y kubeadm='${VERSION}' && apt-mark hold kubeadm && kubeadm upgrade node && apt-mark unhold kubelet kubectl && apt-get install -y kubelet='${VERSION}' kubectl='${VERSION}' && apt-mark hold kubelet kubectl && systemctl daemon-reload && systemctl restart kubelet && echo UPGRADE COMPLETE"],
+      "securityContext": {"privileged": true},
+      "resources": {"requests": {"cpu": "100m", "memory": "256Mi"}, "limits": {"cpu": "1", "memory": "512Mi"}}
     }]
   }
 }'
