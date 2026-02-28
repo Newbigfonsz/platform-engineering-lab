@@ -494,9 +494,9 @@ Now on 1.31.14:
 # Next Upgrade: 1.31 → 1.32 → 1.33
 
 **Created:** 2026-02-28
-**Status:** Planned (not yet started)
-**Current Version:** v1.31.14
-**Target Version:** v1.33.x (latest patch)
+**Completed:** 2026-02-28
+**Current Version:** v1.33.9
+**Target Version:** v1.33.x — **COMPLETE**
 **Path:** 1.31 → 1.32 (pass-through, EOL) → 1.33 (target)
 
 ## Why 1.32 AND 1.33
@@ -554,43 +554,22 @@ No other API removals in 1.32 or 1.33.
 
 Calico upgraded via `kubectl apply -f calico.yaml` (v3.31.0 manifest). Rolling DaemonSet update completed on all 6 nodes. Images changed from `docker.io/calico/` to `quay.io/calico/`. New CRDs added (AdminNetworkPolicy, StagedNetworkPolicy, Tier, etc.). Kyverno ArgoCD app fixed with `crds.install: false`.
 
-### Phase 2: K8s 1.31 → 1.32 (pass-through)
+### Phase 2: K8s 1.31 → 1.32 (pass-through) — COMPLETE (2026-02-28)
 
-Same procedure as 1.30→1.31 upgrade:
-1. Configure v1.32 apt repo on all 6 nodes (nsenter pods)
-2. Take etcd snapshot
-3. Upgrade cp01: `kubeadm upgrade apply v1.32.13 -y`
-4. Upgrade worker05: `kubeadm upgrade node` (via nsenter)
-5. Workers 02→03→04→01: user drains manually, Claude launches nsenter upgrade pods
-6. Quick verification (all nodes on 1.32, pods healthy, etcd healthy)
-7. **Immediately proceed to Phase 3**
+Upgraded all 6 nodes from v1.31.14 to v1.32.13 using nsenter pods. Order: cp01→worker05→worker02→worker03→worker04→worker01. worker04 was missing the `kubeadm.alpha.kubernetes.io/cri-socket` annotation — added manually before kubeadm upgrade node succeeded. VIP briefly unavailable during cp01 upgrade (normal). etcd 3/3 healthy throughout.
 
-### Phase 3: K8s 1.32 → 1.33
+### Phase 3: K8s 1.32 → 1.33 — COMPLETE (2026-02-28)
 
-Same procedure:
-1. Configure v1.33 apt repo on all 6 nodes
-2. Take etcd snapshot
-3. Upgrade all 6 nodes (same order: cp01→worker05→02→03→04→01)
-4. Full post-upgrade verification
+Upgraded all 6 nodes from v1.32.13 to v1.33.9 using nsenter pods. Same order. cp01 used `kubeadm upgrade apply v1.33.9 --ignore-preflight-errors=CreateJob` (health check job timeout too tight). worker05 control plane components (etcd, apiserver, controller-manager, scheduler) all upgraded successfully. Kyverno had dual PDB issue on worker01 drain (`kyverno-admission-controller` PDB created by Kyverno chart + `kyverno-admission-pdb` created manually) — deleted the chart-created one to allow eviction. Vault auth had transient "local node not active but active cluster node not found" during node shuffling — self-healed once vault-0 became active leader.
 
-### Phase 4: Post-Upgrade Verification
+### Phase 4: Post-Upgrade Verification — COMPLETE
 
-```bash
-kubectl get nodes -o wide                    # All on 1.33.x
-kubectl get pods -A --field-selector=status.phase!=Running,status.phase!=Succeeded
-kubectl -n argocd get applications -o custom-columns=NAME:.metadata.name,SYNC:.status.sync.status,HEALTH:.status.health.status
-kubectl -n kube-system exec etcd-k8s-cp01 -- etcdctl \
-  --endpoints=https://127.0.0.1:2379,https://10.10.0.115:2379,https://10.10.0.104:2379 \
-  --cacert=/etc/kubernetes/pki/etcd/ca.crt --cert=/etc/kubernetes/pki/etcd/server.crt --key=/etc/kubernetes/pki/etcd/server.key \
-  endpoint status --write-out=table
-kubectl get clustersecretstore vault-backend -o jsonpath='{.status.conditions[0].status}'
-kubectl get certificates -A -o wide
-```
+All 6 nodes on v1.33.9, all pods Running, etcd 3/3 healthy (130MB — defrag recommended), Vault HA active, ClusterSecretStore Ready, PDBs restored. 24 ArgoCD apps healthy (Kyverno OutOfSync from deleted PDB — sync will recreate it).
 
-### Phase 5: Update Documentation
-- Update CLAUDE.md: version to v1.33.x
-- Update K8S-UPGRADE-PLAN.md: mark 1.32/1.33 complete
-- Commit and push
+### Phase 5: Update Documentation — COMPLETE
+- CLAUDE.md updated to v1.33.9
+- K8S-UPGRADE-PLAN.md marked complete
+- Memory files updated
 
 ## Per-Node Drain Map
 
@@ -610,8 +589,7 @@ Same as 1.31 upgrade — see drain map above. User runs drain/cordon/uncordon ma
 ## Timeline
 
 - **Pre-work:** ~~Upgrade Calico v3.25→v3.31~~ **DONE** (2026-02-28)
-- **Upgrade window:** ~3-4 hours for both 1.32 and 1.33 (2 passes through 6 nodes)
-- **No urgency:** K8s 1.31 supported until ~October 2026
+- **1.31→1.32→1.33 upgrade:** **DONE** (2026-02-28) — ~2 hours for both versions (2 passes through 6 nodes)
 
 ## Future Path (after 1.33)
 

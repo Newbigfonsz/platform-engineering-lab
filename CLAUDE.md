@@ -1,10 +1,10 @@
 # Platform Engineering Lab
 
 ## Cluster Overview
-- **6-node K8s cluster** (v1.31.14) — 2 control planes (cp01, cp02), 4 workers (worker01-05)
+- **6-node K8s cluster** (v1.33.9) — 2 control planes (cp01, worker05), 4 workers (worker01-04)
 - **GPU node**: none (Tesla P4 removed from worker05 — defective)
 - **Domain**: *.alphonzojonesjr.com
-- **GitOps**: ArgoCD (24 apps — 24 Synced+Healthy), Argo Rollouts
+- **GitOps**: ArgoCD (24 apps), Argo Rollouts
 - **Monitoring**: Prometheus/Grafana, Loki, Tempo, OTel Collector
 - **Secrets**: Vault HA + External Secrets Operator
 - **Policy**: Kyverno (5 policies)
@@ -92,9 +92,8 @@
 - `/vault-status` — Vault HA, ESO, ExternalSecrets, network policies
 
 ## Known Issues
-- K8s 1.31.14 — upgrade complete (2026-02-28), upgraded from 1.28→1.29→1.30→1.31
+- K8s v1.33.9 — upgraded 1.28→1.29→1.30→1.31→1.32→1.33 on 2026-02-28
 - Loki has no persistent storage (emptyDir) — data lost on restart; ArgoCD OutOfSync (immutable StatefulSet VCT)
-- Taskapp ArgoCD OutOfSync — immutable PVC storageClass field, harmless
 - worker01/worker02 have 31Gi root disks (cleaned to ~65% on 2026-02-22, monitor regularly)
 - Technitium PVC improved to ~64% (was ~90%, log cleanup working)
 - **Tesla P4 GPU removed from worker05** (2026-02-22) — card was defective (Xid 79 + PCIe RxErr, report at docs/GPU-TEST-REPORT.md). containerd switched to runc default runtime, GPU label removed. Ollama runs CPU-only on worker03/04. NVIDIA packages still installed on worker05 (cleanup optional)
