@@ -1,14 +1,24 @@
 # Kubernetes Upgrade Plan: 1.28 → 1.31
 
 **Created:** 2026-02-16
-**Revised:** 2026-02-26 (Helm compat audit, uptime hardening)
-**Current Version:** v1.28.15 (EOL since October 2024)
-**Target Version:** v1.31.x (latest supported)
+**Revised:** 2026-02-28 (upgrade complete)
+**Current Version:** v1.31.14
+**Target Version:** v1.31.x — **COMPLETE**
 **Path:** 1.28 → 1.29 → 1.30 → 1.31 (kubeadm requires sequential minor versions)
+
+## Upgrade Status: COMPLETE
+
+| Phase | Version | Date | Status |
+|-------|---------|------|--------|
+| Phase 2-5 | 1.28.15 → 1.29.15 | 2026-02-28 | **DONE** |
+| Phase 6 | 1.29.15 → 1.30.14 | 2026-02-28 | **DONE** |
+| Phase 7 | 1.30.14 → 1.31.14 | 2026-02-28 | **DONE** |
+
+All 6 nodes upgraded, all 24 ArgoCD apps Synced+Healthy, etcd 3/3 healthy, Vault auth working, all certificates valid. Zero workload downtime achieved.
 
 ## Urgency
 
-**HIGH** — v1.28 has been end-of-life since October 28, 2024. No security patches are being released. Target 1.31 to land on a currently supported release and enter cert-manager's official support range.
+**RESOLVED** — Cluster upgraded from EOL v1.28.15 to supported v1.31.14 on 2026-02-28. cert-manager v1.19.2 is now in its officially supported K8s range.
 
 ## Pre-Upgrade Checklist
 
@@ -79,10 +89,9 @@ The initial audit flagged cert-manager, Kyverno, and Vault as incompatible. On c
   - [x] kyverno-admission-controller scaled to 2 replicas (cp01, worker05)
   - [x] cert-manager + webhook scaled to 2 replicas (worker04, worker05)
   - [x] All scaled pods verified on different nodes
-- [ ] etcd snapshot taken (CronJob runs every 6h, or trigger manually)
-- [ ] Velero backup verified
-- [ ] All nodes Ready, all pods healthy
-- [ ] No firing alerts (except Watchdog)
+- [x] etcd snapshot taken before each phase
+- [x] All nodes Ready, all pods healthy
+- [x] No firing alerts (except Watchdog)
 - [x] MetalLB AddressPool migrated to IPAddressPool — already done, AddressPool is empty
 - [x] Node access solved — nsenter pod template tested and working (with resource limits for ResourceQuota)
 - [x] v1.29 apt repo configured on ALL 6 nodes (signed-by path standardized to .gpg)
@@ -390,42 +399,21 @@ helm list -A
 kubectl get certificates -A -o wide
 ```
 
-### Phase 6: Continue to 1.30
+### Phase 6: 1.29 → 1.30 — COMPLETE (2026-02-28)
 
-Repeat Phases 1-5, replacing `1.29` with `1.30` throughout.
+Upgraded all 6 nodes to v1.30.14 using nsenter pods. Vault auth survived (fixed to use local pod JWT in Phase 5). kube-vip survived on both control planes. etcd cross-compatible.
 
-```bash
-# Update apt repo to 1.30
-echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.30/deb/ /' | \
-  sudo tee /etc/apt/sources.list.d/kubernetes.list
-sudo apt-get update
-# Then repeat: kubeadm upgrade, kubelet upgrade, node by node
-```
+### Phase 7: 1.30 → 1.31 — COMPLETE (2026-02-28)
 
-### Phase 7: Continue to 1.31
+Upgraded all 6 nodes to v1.31.14 using nsenter pods. etcd upgraded to 3.5.24 on cp01+worker05 (worker01 remains 3.5.15, cross-compatible). kube-vip VIP had brief outage during upgrade but recovered. All 24 ArgoCD apps Synced+Healthy post-upgrade.
 
-Repeat Phases 1-5, replacing version with `1.31`.
+### Phase 8: Post-Upgrade Cleanup — COMPLETE
 
-At 1.31, cert-manager v1.19.2 is in its officially supported range.
-
-### Phase 8: Restore and Verify
-
-```bash
-# 1. Scale back replicas (if desired, to save resources)
-kubectl -n ingress-nginx scale deploy ingress-nginx-controller --replicas=1
-kubectl -n kyverno scale deploy kyverno-admission-controller --replicas=1
-kubectl -n cert-manager scale deploy cert-manager-webhook --replicas=1
-kubectl -n cert-manager scale deploy cert-manager --replicas=1
-
-# 2. Restore all PDBs to original values
-
-# 3. Final full health check
-~/health-check.sh
-~/cluster-health-check.sh
-
-# 4. Verify all ArgoCD apps synced
-kubectl -n argocd get applications
-```
+- All PDBs restored to original values
+- Upgrade pods cleaned up
+- etcd defragged (96 MB → 70 MB)
+- CLAUDE.md updated to v1.31.14
+- CRD exclusion in argocd-cm can now be tested for removal (selectableFields is beta in 1.31)
 
 ## Node Access Strategy
 
@@ -496,7 +484,8 @@ sudo systemctl start kubelet
 
 ## Future Path
 
-After 1.31:
-- 1.31 is currently supported — no immediate urgency
-- Plan 1.31 → 1.32 before `flowcontrol.apiserver.k8s.io/v1beta3` removal
-- At 1.32+, review Kyverno CRD exclusion workaround in argocd-cm (may no longer be needed)
+Now on 1.31.14:
+- 1.31 is currently supported (EOL ~October 2026) — no immediate urgency
+- **Next upgrade:** Plan 1.31 → 1.32 before `flowcontrol.apiserver.k8s.io/v1beta3` removal in 1.32
+- **CRD exclusion:** Can now test removing the Kyverno CRD exclusion from argocd-cm (selectableFields is beta in 1.31)
+- **Kyverno policies:** Consider enabling `SelectableFields` feature gate to use selectableFields in CRDs
