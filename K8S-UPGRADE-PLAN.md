@@ -486,6 +486,155 @@ sudo systemctl start kubelet
 
 Now on 1.31.14:
 - 1.31 is currently supported (EOL ~October 2026) — no immediate urgency
-- **Next upgrade:** Plan 1.31 → 1.32 before `flowcontrol.apiserver.k8s.io/v1beta3` removal in 1.32
-- **CRD exclusion:** Can now test removing the Kyverno CRD exclusion from argocd-cm (selectableFields is beta in 1.31)
-- **Kyverno policies:** Consider enabling `SelectableFields` feature gate to use selectableFields in CRDs
+- CRD exclusion removed from argocd-cm (2026-02-28) — K8s 1.31 supports selectableFields natively
+- **Next upgrade:** 1.31 → 1.32 → 1.33 (see plan below)
+
+---
+
+# Next Upgrade: 1.31 → 1.32 → 1.33
+
+**Created:** 2026-02-28
+**Status:** Planned (not yet started)
+**Current Version:** v1.31.14
+**Target Version:** v1.33.x (latest patch)
+**Path:** 1.31 → 1.32 (pass-through, EOL) → 1.33 (target)
+
+## Why 1.32 AND 1.33
+
+K8s 1.32 went EOL on Feb 28, 2026. kubeadm requires sequential minor version upgrades, so we must pass through 1.32 to reach 1.33. **Do NOT stop at 1.32** — continue to 1.33 in the same maintenance window.
+
+| Version | Latest Patch | EOL Date | Notes |
+|---------|-------------|----------|-------|
+| 1.32 | v1.32.13 | Feb 28, 2026 | **EOL — pass-through only** |
+| 1.33 | v1.33.9 | ~June 2026 | **TARGET** — 4 months of support |
+
+## Pre-Upgrade Requirements
+
+### 1. Calico Upgrade — BLOCKER
+
+| Detail | Value |
+|--------|-------|
+| Current | **Calico v3.25.0** (old — released mid-2023) |
+| Required | **Calico v3.31+** for K8s 1.32 support |
+| Risk | High — Calico manages CNI networking. Bad upgrade = cluster-wide network outage |
+| Approach | Rolling DaemonSet upgrade. Download v3.31 manifest, diff, apply, verify |
+
+**Must complete before starting K8s upgrade.**
+
+```bash
+# Check current installation
+kubectl get daemonset -n kube-system calico-node -o jsonpath='{.spec.template.spec.containers[0].image}'
+kubectl -n kube-system get pods -l k8s-app=calico-node -o wide
+
+# Download v3.31 manifest
+curl -O https://raw.githubusercontent.com/projectcalico/calico/v3.31.0/manifests/calico.yaml
+
+# Review changes (IMPORTANT — diff before applying)
+# Apply
+kubectl apply -f calico.yaml
+
+# Verify rolling upgrade completes
+kubectl -n kube-system rollout status daemonset/calico-node
+
+# Test pod-to-pod networking
+kubectl run test-net --image=busybox --restart=Never -- ping -c 3 <pod-ip>
+```
+
+### 2. API Removals in 1.32
+
+| API | Status | Action |
+|-----|--------|--------|
+| `flowcontrol.apiserver.k8s.io/v1beta3` | **CLEAR** — all FlowSchemas and PriorityLevelConfigs already use `v1` | None |
+
+No other API removals in 1.32 or 1.33.
+
+### 3. Component Compatibility Matrix
+
+| Component | Current | K8s 1.32? | K8s 1.33? | Action |
+|-----------|---------|-----------|-----------|--------|
+| Kyverno | v1.16.1 (chart 3.1.4) | YES | Verify | Check 1.33 compat before upgrade |
+| cert-manager | v1.19.2 | YES | Verify | Check 1.33 compat |
+| ArgoCD | v3.2.3 | YES | YES | None |
+| Vault | v1.21.2 (chart 0.32.0) | YES | Verify | None expected |
+| Longhorn | v1.10.1 | YES | Verify | Check SUSE support matrix |
+| ESO | v1.3.1 | YES | YES | None |
+| containerd 1.7.28 | — | YES | YES | Plan 2.0 upgrade before K8s 1.34 |
+| **Calico** | **v3.25.0** | **NO** | **NO** | **MUST upgrade to v3.31+ first** |
+
+### 4. worker01 etcd Version Skew
+
+- cp01 + worker05: etcd 3.5.24-0
+- worker01: etcd 3.5.15-0 (manually-added member)
+- Risk: Low — 3.5.x versions are cross-compatible
+- Action: Monitor. Consider updating worker01's etcd manifest to 3.5.24+ after upgrade
+
+## Upgrade Procedure
+
+### Phase 1: Upgrade Calico v3.25 → v3.31 (pre-work, before K8s upgrade)
+
+See commands above. Verify all calico-node pods are Running and pod networking works before proceeding.
+
+### Phase 2: K8s 1.31 → 1.32 (pass-through)
+
+Same procedure as 1.30→1.31 upgrade:
+1. Configure v1.32 apt repo on all 6 nodes (nsenter pods)
+2. Take etcd snapshot
+3. Upgrade cp01: `kubeadm upgrade apply v1.32.13 -y`
+4. Upgrade worker05: `kubeadm upgrade node` (via nsenter)
+5. Workers 02→03→04→01: user drains manually, Claude launches nsenter upgrade pods
+6. Quick verification (all nodes on 1.32, pods healthy, etcd healthy)
+7. **Immediately proceed to Phase 3**
+
+### Phase 3: K8s 1.32 → 1.33
+
+Same procedure:
+1. Configure v1.33 apt repo on all 6 nodes
+2. Take etcd snapshot
+3. Upgrade all 6 nodes (same order: cp01→worker05→02→03→04→01)
+4. Full post-upgrade verification
+
+### Phase 4: Post-Upgrade Verification
+
+```bash
+kubectl get nodes -o wide                    # All on 1.33.x
+kubectl get pods -A --field-selector=status.phase!=Running,status.phase!=Succeeded
+kubectl -n argocd get applications -o custom-columns=NAME:.metadata.name,SYNC:.status.sync.status,HEALTH:.status.health.status
+kubectl -n kube-system exec etcd-k8s-cp01 -- etcdctl \
+  --endpoints=https://127.0.0.1:2379,https://10.10.0.115:2379,https://10.10.0.104:2379 \
+  --cacert=/etc/kubernetes/pki/etcd/ca.crt --cert=/etc/kubernetes/pki/etcd/server.crt --key=/etc/kubernetes/pki/etcd/server.key \
+  endpoint status --write-out=table
+kubectl get clustersecretstore vault-backend -o jsonpath='{.status.conditions[0].status}'
+kubectl get certificates -A -o wide
+```
+
+### Phase 5: Update Documentation
+- Update CLAUDE.md: version to v1.33.x
+- Update K8S-UPGRADE-PLAN.md: mark 1.32/1.33 complete
+- Commit and push
+
+## Per-Node Drain Map
+
+Same as 1.31 upgrade — see drain map above. User runs drain/cordon/uncordon manually (deny rules in settings.json).
+
+## Risks & Mitigations
+
+| Risk | Mitigation |
+|------|-----------|
+| Calico upgrade breaks networking | Rolling DaemonSet upgrade. Test pod networking after. Rollback by applying old manifest |
+| Stopping at 1.32 (EOL) | Plan explicitly chains 1.32→1.33 in same session |
+| kube-vip static pod overwritten | Backups at `backups/kube-vip/`. Verify after each CP upgrade |
+| Vault auth breaks | Fixed to use local JWT (no stored token). Verify after cp01 |
+| worker01 etcd issues | 3.5.x cross-compatible. Verify health post-upgrade |
+| containerd 1.7.28 deprecation | Not until K8s 1.34. No action needed now |
+
+## Timeline
+
+- **Pre-work (can do anytime):** Upgrade Calico v3.25→v3.31, verify component compat
+- **Upgrade window:** ~3-4 hours for both 1.32 and 1.33 (2 passes through 6 nodes)
+- **No urgency:** K8s 1.31 supported until ~October 2026
+
+## Future Path (after 1.33)
+
+- K8s 1.33 EOL ~June 2026 — plan 1.34 upgrade before then
+- **At K8s 1.34:** containerd 1.7.x deprecated — upgrade cp01/worker01-04 to containerd 2.x
+- **At K8s 1.36:** containerd 1.7.x unsupported
