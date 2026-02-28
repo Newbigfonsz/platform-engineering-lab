@@ -15,7 +15,7 @@
 ### ArgoCD
 - Apps are NOT managed via app-of-apps — must `kubectl apply -f` new Application manifests
 - CRD drift: use `ServerSideApply=true` + `RespectIgnoreDifferences=true` sync options for Helm charts with CRDs
-- Kyverno: `skipCrds: true` in ArgoCD app (CRD exclusion from argocd-cm removed — K8s 1.31 supports selectableFields natively)
+- Kyverno: `crds.install: false` in Helm values + `ServerSideDiff=true` compare option (Kyverno manages its own CRDs at runtime — chart CRDs drift and cause OutOfSync)
 - Sync via kubectl: `kubectl -n argocd patch application <name> --type merge -p '{"operation":{"initiatedBy":{"username":"admin"},"sync":{"revision":"HEAD"}}}'`
 - Hard refresh: patch annotation `argocd.argoproj.io/refresh: hard`
 

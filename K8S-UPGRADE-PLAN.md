@@ -510,35 +510,15 @@ K8s 1.32 went EOL on Feb 28, 2026. kubeadm requires sequential minor version upg
 
 ## Pre-Upgrade Requirements
 
-### 1. Calico Upgrade — BLOCKER
+### 1. Calico Upgrade — COMPLETE
 
 | Detail | Value |
 |--------|-------|
-| Current | **Calico v3.25.0** (old — released mid-2023) |
-| Required | **Calico v3.31+** for K8s 1.32 support |
-| Risk | High — Calico manages CNI networking. Bad upgrade = cluster-wide network outage |
-| Approach | Rolling DaemonSet upgrade. Download v3.31 manifest, diff, apply, verify |
-
-**Must complete before starting K8s upgrade.**
-
-```bash
-# Check current installation
-kubectl get daemonset -n kube-system calico-node -o jsonpath='{.spec.template.spec.containers[0].image}'
-kubectl -n kube-system get pods -l k8s-app=calico-node -o wide
-
-# Download v3.31 manifest
-curl -O https://raw.githubusercontent.com/projectcalico/calico/v3.31.0/manifests/calico.yaml
-
-# Review changes (IMPORTANT — diff before applying)
-# Apply
-kubectl apply -f calico.yaml
-
-# Verify rolling upgrade completes
-kubectl -n kube-system rollout status daemonset/calico-node
-
-# Test pod-to-pod networking
-kubectl run test-net --image=busybox --restart=Never -- ping -c 3 <pod-ip>
-```
+| Previous | Calico v3.25.0 (released mid-2023) |
+| Upgraded to | **Calico v3.31.0** (2026-02-28) |
+| Images | `quay.io/calico/node:v3.31.0`, `quay.io/calico/cni:v3.31.0`, `quay.io/calico/kube-controllers:v3.31.0` |
+| Result | Rolling DaemonSet upgrade, all 6 calico-node pods Running, zero networking downtime |
+| Note | ArgoCD Kyverno app fixed with `crds.install: false` (Kyverno CRDs drifted post-Calico upgrade) |
 
 ### 2. API Removals in 1.32
 
@@ -559,7 +539,7 @@ No other API removals in 1.32 or 1.33.
 | Longhorn | v1.10.1 | YES | Verify | Check SUSE support matrix |
 | ESO | v1.3.1 | YES | YES | None |
 | containerd 1.7.28 | — | YES | YES | Plan 2.0 upgrade before K8s 1.34 |
-| **Calico** | **v3.25.0** | **NO** | **NO** | **MUST upgrade to v3.31+ first** |
+| **Calico** | **v3.31.0** | **YES** | **YES** | **DONE** (upgraded 2026-02-28) |
 
 ### 4. worker01 etcd Version Skew
 
@@ -570,9 +550,9 @@ No other API removals in 1.32 or 1.33.
 
 ## Upgrade Procedure
 
-### Phase 1: Upgrade Calico v3.25 → v3.31 (pre-work, before K8s upgrade)
+### Phase 1: Upgrade Calico v3.25 → v3.31 — COMPLETE (2026-02-28)
 
-See commands above. Verify all calico-node pods are Running and pod networking works before proceeding.
+Calico upgraded via `kubectl apply -f calico.yaml` (v3.31.0 manifest). Rolling DaemonSet update completed on all 6 nodes. Images changed from `docker.io/calico/` to `quay.io/calico/`. New CRDs added (AdminNetworkPolicy, StagedNetworkPolicy, Tier, etc.). Kyverno ArgoCD app fixed with `crds.install: false`.
 
 ### Phase 2: K8s 1.31 → 1.32 (pass-through)
 
@@ -629,7 +609,7 @@ Same as 1.31 upgrade — see drain map above. User runs drain/cordon/uncordon ma
 
 ## Timeline
 
-- **Pre-work (can do anytime):** Upgrade Calico v3.25→v3.31, verify component compat
+- **Pre-work:** ~~Upgrade Calico v3.25→v3.31~~ **DONE** (2026-02-28)
 - **Upgrade window:** ~3-4 hours for both 1.32 and 1.33 (2 passes through 6 nodes)
 - **No urgency:** K8s 1.31 supported until ~October 2026
 
