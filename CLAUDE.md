@@ -1,7 +1,7 @@
 # Platform Engineering Lab
 
 ## Cluster Overview
-- **6-node K8s cluster** (v1.30.14) — 2 control planes (cp01, cp02), 4 workers (worker01-05)
+- **6-node K8s cluster** (v1.31.14) — 2 control planes (cp01, cp02), 4 workers (worker01-05)
 - **GPU node**: none (Tesla P4 removed from worker05 — defective)
 - **Domain**: *.alphonzojonesjr.com
 - **GitOps**: ArgoCD (24 apps — 22 Synced, 2 known OutOfSync), Argo Rollouts
@@ -15,8 +15,8 @@
 ### ArgoCD
 - Apps are NOT managed via app-of-apps — must `kubectl apply -f` new Application manifests
 - CRD drift: use `ServerSideApply=true` + `RespectIgnoreDifferences=true` sync options for Helm charts with CRDs
-- Kyverno: `skipCrds: true` + global CRD exclusion in argocd-cm (selectableFields CRD feature is alpha in 1.30, beta in 1.31)
-- argocd-cm has global `resource.exclusions` for CRDs — remove after K8s 1.31+ upgrade
+- Kyverno: `skipCrds: true` + global CRD exclusion in argocd-cm (selectableFields CRD feature is beta in 1.31 — can test removing exclusion now)
+- argocd-cm has global `resource.exclusions` for CRDs — safe to remove now on K8s 1.31 (test first)
 - Sync via kubectl: `kubectl -n argocd patch application <name> --type merge -p '{"operation":{"initiatedBy":{"username":"admin"},"sync":{"revision":"HEAD"}}}'`
 - Hard refresh: patch annotation `argocd.argoproj.io/refresh: hard`
 
@@ -93,7 +93,7 @@
 - `/vault-status` — Vault HA, ESO, ExternalSecrets, network policies
 
 ## Known Issues
-- K8s 1.30 — upgrade plan at K8S-UPGRADE-PLAN.md (target: 1.31)
+- K8s 1.31.14 — upgrade complete (2026-02-28), upgraded from 1.28→1.29→1.30→1.31
 - Loki has no persistent storage (emptyDir) — data lost on restart; ArgoCD OutOfSync (immutable StatefulSet VCT)
 - Taskapp ArgoCD OutOfSync — immutable PVC storageClass field, harmless
 - worker01/worker02 have 31Gi root disks (cleaned to ~65% on 2026-02-22, monitor regularly)
