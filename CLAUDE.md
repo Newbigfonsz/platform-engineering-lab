@@ -15,7 +15,7 @@
 ### ArgoCD
 - Apps are NOT managed via app-of-apps — must `kubectl apply -f` new Application manifests
 - CRD drift: use `ServerSideApply=true` + `RespectIgnoreDifferences=true` sync options for Helm charts with CRDs
-- Kyverno: `crds.install: false` in Helm values + `ServerSideDiff=true` compare option (Kyverno manages its own CRDs at runtime — chart CRDs drift and cause OutOfSync)
+- Kyverno: CRDs managed by Helm chart (skipCrds removed after K8s 1.33 upgrade); uses `ServerSideApply=true` + `RespectIgnoreDifferences=true` sync options
 - Sync via kubectl: `kubectl -n argocd patch application <name> --type merge -p '{"operation":{"initiatedBy":{"username":"admin"},"sync":{"revision":"HEAD"}}}'`
 - Hard refresh: patch annotation `argocd.argoproj.io/refresh: hard`
 
@@ -92,11 +92,12 @@
 - `/vault-status` — Vault HA, ESO, ExternalSecrets, network policies
 
 ## Known Issues
-- K8s v1.33.9 — upgraded 1.28→1.29→1.30→1.31→1.32→1.33 on 2026-02-28
-- Loki has no persistent storage (emptyDir) — data lost on restart; ArgoCD OutOfSync (immutable StatefulSet VCT)
-- worker01/worker02 have 31Gi root disks (cleaned to ~65% on 2026-02-22, monitor regularly)
-- Technitium PVC improved to ~64% (was ~90%, log cleanup working)
-- **Tesla P4 GPU removed from worker05** (2026-02-22) — card was defective (Xid 79 + PCIe RxErr, report at docs/GPU-TEST-REPORT.md). containerd switched to runc default runtime, GPU label removed. Ollama runs CPU-only on worker03/04. NVIDIA packages still installed on worker05 (cleanup optional)
+- Loki has no persistent storage (emptyDir) — data lost on restart
+- worker01/worker02 have 31Gi root disks — monitor regularly
+- **Tesla P4 GPU removed from worker05** (2026-02-22) — defective (Xid 79). Ollama runs CPU-only on worker03/04
+
+## Completed Milestones
+- K8s upgrade: 1.28.15 → 1.33.9 (2026-02-28) — all 6 nodes, Kyverno CRD workarounds removed
 
 ## Resolved Issues (2026-02-22)
 - Tempo OOMKill: resources were at wrong Helm path + 1024MB ballast exceeded 512Mi limit → fixed
