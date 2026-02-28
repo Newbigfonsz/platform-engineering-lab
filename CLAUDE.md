@@ -4,7 +4,7 @@
 - **6-node K8s cluster** (v1.31.14) — 2 control planes (cp01, cp02), 4 workers (worker01-05)
 - **GPU node**: none (Tesla P4 removed from worker05 — defective)
 - **Domain**: *.alphonzojonesjr.com
-- **GitOps**: ArgoCD (24 apps — 22 Synced, 2 known OutOfSync), Argo Rollouts
+- **GitOps**: ArgoCD (24 apps — 24 Synced+Healthy), Argo Rollouts
 - **Monitoring**: Prometheus/Grafana, Loki, Tempo, OTel Collector
 - **Secrets**: Vault HA + External Secrets Operator
 - **Policy**: Kyverno (5 policies)
@@ -15,8 +15,7 @@
 ### ArgoCD
 - Apps are NOT managed via app-of-apps — must `kubectl apply -f` new Application manifests
 - CRD drift: use `ServerSideApply=true` + `RespectIgnoreDifferences=true` sync options for Helm charts with CRDs
-- Kyverno: `skipCrds: true` + global CRD exclusion in argocd-cm (selectableFields CRD feature is beta in 1.31 — can test removing exclusion now)
-- argocd-cm has global `resource.exclusions` for CRDs — safe to remove now on K8s 1.31 (test first)
+- Kyverno: `skipCrds: true` in ArgoCD app (CRD exclusion from argocd-cm removed — K8s 1.31 supports selectableFields natively)
 - Sync via kubectl: `kubectl -n argocd patch application <name> --type merge -p '{"operation":{"initiatedBy":{"username":"admin"},"sync":{"revision":"HEAD"}}}'`
 - Hard refresh: patch annotation `argocd.argoproj.io/refresh: hard`
 
