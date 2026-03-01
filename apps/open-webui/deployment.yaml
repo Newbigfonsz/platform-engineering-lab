@@ -13,6 +13,15 @@ spec:
       labels:
         app: open-webui
     spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: kubernetes.io/hostname
+                operator: NotIn
+                values:
+                - k8s-worker05
       containers:
       - name: open-webui
         image: ghcr.io/open-webui/open-webui:main
