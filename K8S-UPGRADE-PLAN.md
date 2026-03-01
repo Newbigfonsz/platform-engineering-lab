@@ -1,10 +1,10 @@
-# Kubernetes Upgrade Plan: 1.28 → 1.31
+# Kubernetes Upgrade Plan: 1.28 → 1.33
 
 **Created:** 2026-02-16
-**Revised:** 2026-02-28 (upgrade complete)
-**Current Version:** v1.31.14
-**Target Version:** v1.31.x — **COMPLETE**
-**Path:** 1.28 → 1.29 → 1.30 → 1.31 (kubeadm requires sequential minor versions)
+**Revised:** 2026-03-01 (upgrade complete)
+**Current Version:** v1.33.9
+**Target Version:** v1.33.x — **COMPLETE**
+**Path:** 1.28 → 1.29 → 1.30 → 1.31 → 1.32 → 1.33 (kubeadm requires sequential minor versions)
 
 ## Upgrade Status: COMPLETE
 
@@ -13,8 +13,12 @@
 | Phase 2-5 | 1.28.15 → 1.29.15 | 2026-02-28 | **DONE** |
 | Phase 6 | 1.29.15 → 1.30.14 | 2026-02-28 | **DONE** |
 | Phase 7 | 1.30.14 → 1.31.14 | 2026-02-28 | **DONE** |
+| Phase 8 | 1.31.14 → 1.32.x | 2026-02-28 | **DONE** |
+| Phase 9 | 1.32.x → 1.33.9 | 2026-02-28 | **DONE** |
+| Post-upgrade | etcd 3.5.15 → 3.5.24 (worker01 manual) | 2026-03-01 | **DONE** |
+| Post-upgrade | Kyverno CRD workarounds removed (skipCrds, argocd-cm exclusion) | 2026-03-01 | **DONE** |
 
-All 6 nodes upgraded, all 24 ArgoCD apps Synced+Healthy, etcd 3/3 healthy, Vault auth working, all certificates valid. Zero workload downtime achieved.
+All 6 nodes on v1.33.9, etcd 3/3 on v3.5.24 (32 MB), all 24 ArgoCD apps Synced+Healthy, Vault auth working, all certificates valid. Zero workload downtime achieved.
 
 ## Urgency
 
